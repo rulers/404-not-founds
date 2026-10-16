@@ -75,10 +75,11 @@ button {
   top: 12px;
 }
 .gallery-shell {
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  padding: 0 48px;
+  --gallery-edge: clamp(22px, 3.75vw, 48px);
+  position: relative;
+  isolation: isolate;
+  height: 100svh;
+  height: 100dvh;
   background: var(--bg);
   color: var(--fg);
 }
@@ -113,12 +114,9 @@ button {
 .header-note,
 .nav-link,
 .shuffle-button,
-.exhibition-topline,
 .day-label,
 .category-tag,
 .interaction-hint,
-.project-progress,
-.footer-location,
 .signal-caption,
 .signal-coordinate,
 .eyebrow,
@@ -177,22 +175,8 @@ button {
   line-height: 14px;
 }
 .exhibition {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 540px;
-}
-.exhibition-topline {
-  display: flex;
-  justify-content: space-between;
-  padding-top: 29px;
-  color: var(--muted);
-  font-size: 9px;
-}
-.exhibition-topline > span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  position: absolute;
+  inset: 0;
 }
 .live-dot {
   display: inline-block;
@@ -203,10 +187,14 @@ button {
   box-shadow: 0 0 9px color-mix(in srgb, var(--acid) 15%, transparent);
 }
 .artwork-wrap {
-  flex: 1;
   display: flex;
-  min-height: 360px;
-  padding: 28px 0 22px;
+  width: 100%;
+  height: 100%;
+}
+.artwork-wrap > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
 }
 .glitch-stage {
   --split: 2px;
@@ -215,18 +203,20 @@ button {
   --y: 50%;
   position: relative;
   width: 100%;
-  min-height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 0;
-  padding: 35px 20px 65px;
+  padding: 0;
   appearance: none;
   background: var(--bg);
   isolation: isolate;
   overflow: hidden;
   touch-action: pan-y;
   cursor: crosshair;
+}
+.glitch-stage:focus-visible {
+  outline-offset: -8px;
 }
 .stage-corner {
   position: absolute;
@@ -258,8 +248,9 @@ button {
 }
 .signal-coordinate {
   position: absolute;
-  left: 25px;
-  top: 18px;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
   font-size: 8px;
   color: var(--detail);
   letter-spacing: 1.5px;
@@ -267,7 +258,7 @@ button {
 .glitch-number {
   position: relative;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(160px, 30vw, 460px);
+  font-size: clamp(96px, min(30vw, 55dvh), 460px);
   font-weight: 900;
   letter-spacing: -0.085em;
   line-height: 0.9;
@@ -360,7 +351,7 @@ button {
 }
 .signal-caption {
   position: absolute;
-  bottom: 29px;
+  bottom: 18%;
   left: 0;
   right: 0;
   color: var(--muted);
@@ -403,16 +394,26 @@ button {
   opacity: 0.25;
 }
 .artwork-info {
+  position: absolute;
+  z-index: 2;
+  left: max(var(--gallery-edge), env(safe-area-inset-left));
+  right: max(var(--gallery-edge), env(safe-area-inset-right));
+  bottom: max(28px, env(safe-area-inset-bottom));
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  padding: 0 0 31px;
   gap: 24px;
+  pointer-events: none;
+}
+.artwork-info a {
+  pointer-events: auto;
 }
 .artwork-identity {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 .day-label {
   color: var(--muted);
@@ -420,10 +421,12 @@ button {
   white-space: nowrap;
 }
 .artwork-identity h1 {
-  font-size: 20px;
-  letter-spacing: -0.5px;
-  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+  font-weight: 400;
   margin: 0;
+  overflow-wrap: anywhere;
 }
 .artwork-identity h1 span {
   font-size: 14px;
@@ -442,64 +445,14 @@ button {
   letter-spacing: 0.8px;
 }
 .interaction-hint {
-  color: var(--muted);
-  font-size: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.crosshair {
-  font-size: 19px;
-  color: var(--soft-fg);
-}
-.hint-divider {
-  color: var(--line);
-  margin: 0 5px;
-}
-.site-footer {
-  border-top: 1px solid var(--line);
-  padding: 27px 0 29px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 25px;
-}
-.site-footer p {
+  max-width: 40%;
   margin: 0;
-  font-size: 12px;
-  letter-spacing: -0.2px;
-  color: var(--soft-fg);
-}
-.mobile-break {
-  display: none;
-}
-.project-progress {
-  display: flex;
-  align-items: center;
-  gap: 18px;
   color: var(--muted);
-  font-size: 8px;
-  letter-spacing: 0.7px;
-}
-.progress-track {
-  height: 2px;
-  width: 90px;
-  background: var(--line);
-}
-.progress-track i {
-  display: block;
-  background: var(--acid);
-  height: 2px;
-  min-width: 3px;
-}
-.footer-location {
-  color: var(--detail);
-  font-size: 8px;
-  letter-spacing: 0.6px;
-}
-.footer-location > span {
-  color: var(--soft-fg);
-  margin-left: 8px;
+  font-size: 9px;
+  line-height: 1.8;
+  text-align: right;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 @keyframes base-drift {
   0%,
@@ -823,28 +776,14 @@ button {
   color: #999990;
 }
 @media (min-width: 1600px) {
-  .gallery-shell,
   .discover-shell {
     padding-left: 70px;
     padding-right: 70px;
-  }
-  .artwork-wrap {
-    min-height: 530px;
   }
 }
 @media (max-width: 1100px) {
   .header-note {
     display: none;
-  }
-  .footer-location {
-    display: none;
-  }
-  .interaction-hint {
-    font-size: 7px;
-    gap: 6px;
-  }
-  .artwork-identity {
-    gap: 12px;
   }
   .artwork-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -854,7 +793,6 @@ button {
   }
 }
 @media (max-width: 700px) {
-  .gallery-shell,
   .discover-shell {
     padding: 0 22px;
   }
@@ -891,88 +829,12 @@ button {
   .shuffle-button > span {
     font-size: 17px;
   }
-  .exhibition {
-    min-height: 560px;
-  }
-  .exhibition-topline {
-    padding-top: 25px;
-    font-size: 8px;
-    letter-spacing: 0.7px;
-  }
-  .artwork-wrap {
-    padding: 25px 0;
-    min-height: 360px;
-  }
-  .glitch-stage {
-    min-height: 340px;
-    padding: 40px 0 60px;
-  }
   .glitch-number {
-    font-size: clamp(145px, 34vw, 235px);
+    font-size: clamp(96px, min(40vw, 50dvh), 235px);
     transform: scaleX(1.02);
-  }
-  .signal-coordinate {
-    left: 15px;
-    font-size: 6px;
-    letter-spacing: 1px;
-  }
-  .signal-caption {
-    font-size: 6px;
-    letter-spacing: 1px;
-    gap: 6px;
-    bottom: 28px;
   }
   .signal-caption i {
     margin: 0;
-  }
-  .artwork-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-    padding-bottom: 24px;
-  }
-  .artwork-identity {
-    width: 100%;
-    gap: 14px;
-  }
-  .artwork-identity h1 {
-    font-size: 19px;
-  }
-  .artwork-identity .category-tag {
-    margin-left: auto;
-  }
-  .interaction-hint {
-    font-size: 7px;
-    letter-spacing: 0.7px;
-    margin: 0;
-  }
-  .crosshair {
-    font-size: 15px;
-  }
-  .site-footer {
-    padding: 23px 0;
-    align-items: flex-start;
-  }
-  .site-footer p {
-    font-size: 11px;
-    line-height: 1.5;
-  }
-  .mobile-break {
-    display: block;
-  }
-  .project-progress {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    max-width: 155px;
-    gap: 9px;
-    font-size: 7px;
-  }
-  .project-progress > span:first-child {
-    width: 100%;
-    text-align: right;
-  }
-  .progress-track {
-    width: 60px;
   }
   .collection-heading {
     padding: 46px 0 34px;
@@ -1067,5 +929,90 @@ button {
   }
   .shuffle-button > span {
     font-size: 14px;
+  }
+}
+
+/* Only actionable UI captures input; the rest passes through to the artwork. */
+.site-header-overlay {
+  position: absolute;
+  z-index: 2;
+  top: max(20px, env(safe-area-inset-top));
+  left: max(var(--gallery-edge), env(safe-area-inset-left));
+  right: max(var(--gallery-edge), env(safe-area-inset-right));
+  height: auto;
+  min-height: 44px;
+  border: 0;
+  pointer-events: none;
+}
+.site-header-overlay a,
+.site-header-overlay button {
+  pointer-events: auto;
+}
+.site-header-overlay .wordmark {
+  min-height: 44px;
+  font-size: 15px;
+}
+.site-header-overlay .wordmark-dot {
+  align-self: center;
+  transform: translateY(-4px);
+}
+.site-header-overlay nav {
+  gap: 24px;
+}
+.site-header-overlay .nav-link,
+.site-header-overlay .shuffle-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 0;
+  background: transparent;
+  border: 0;
+  color: var(--soft-fg);
+  font-size: 10px;
+  font-weight: 400;
+}
+.site-header-overlay .nav-link:hover,
+.site-header-overlay .shuffle-button:hover {
+  color: var(--acid);
+}
+@media (max-width: 700px) {
+  .site-header-overlay {
+    top: max(12px, env(safe-area-inset-top));
+    gap: 12px;
+  }
+  .site-header-overlay .wordmark {
+    font-size: 12px;
+  }
+  .site-header-overlay nav {
+    gap: 14px;
+  }
+  .site-header-overlay .nav-link,
+  .site-header-overlay .shuffle-button {
+    font-size: 8px;
+    letter-spacing: 0.6px;
+  }
+  .site-header-overlay .shuffle-button > span {
+    display: none;
+  }
+  .artwork-info {
+    bottom: max(22px, env(safe-area-inset-bottom));
+    gap: 16px;
+  }
+  .artwork-identity {
+    max-width: 47%;
+    gap: 6px;
+  }
+  .artwork-identity h1 {
+    font-size: 13px;
+  }
+  .interaction-hint {
+    max-width: 47%;
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+  .signal-coordinate,
+  .signal-caption {
+    font-size: 6px;
+    letter-spacing: 1px;
   }
 }

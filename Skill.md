@@ -15,7 +15,7 @@
 2. `components/artworks/` に引数なし・default exportの作品コンポーネントを作る。操作やフックには `"use client"` を使う。
 3. 独自のクラス名、タッチ、キーボード、reduced-motion、リソース解除を実装する。WebGLは必要な作品だけに使う。
 4. `public/thumbnails/NNN.svg` 等を追加する。推奨比率3:2。外部通信なしで表示できる画像を優先する。
-5. `lib/artworks.ts` に一意の3桁ID、タイトル、category、createdAt、description、thumbnail、theme、componentを登録する。配列末尾へ追加し、既存IDは変えない。
+5. `lib/artworks.ts` に一意の3桁ID、タイトル、category、createdAt、description、instructions、thumbnail、theme、componentを登録する。配列末尾へ追加し、既存IDは変えない。
 6. `doc/day-NNN-title.md` を追加し、[doc/README.md](doc/README.md) の作品一覧にリンクする。
 7. Discoverから選択し、Homeと個別URLの同じ作品・テーマ・操作を確認する。`createdAt` による予約公開はないので、登録した作品は公開される。
 

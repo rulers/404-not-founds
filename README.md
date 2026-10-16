@@ -75,6 +75,7 @@ import YourArtwork from "@/components/artworks/YourArtwork";
   category: "Typography",
   createdAt: "2026-10-18",
   description: "A short description.",
+  instructions: "Move to explore / Click or tap to interact",
   thumbnail: "/thumbnails/002.svg",
   theme: "light", // 白背景・黒文字。省略または "dark" で黒背景
   component: YourArtwork,
@@ -135,3 +136,9 @@ CIは整形チェック・lint・単体テスト・型チェック・ビルド�
 `.vscode/settings.json` でPrettierの保存時整形とESLintの保存時検査・自動修正を設定しています。`npm ci` の実行後、`.vscode/extensions.json` の推奨拡張 **Prettier - Code formatter** と **ESLint** をインストールし、このリポジトリをVS Codeで開いてください。拡張の導入自体はワークスペース設定では自動実行されません。
 
 PrettierはTS/JS・CSS・JSON・Markdown・YAML等の整形、ESLintはJS/TS/Reactの検査・修正を担当します。ESLintの自動修正対象外の問題はProblemsに表示されます。`npm run format:check` と `npm run lint` はCIでも実行します。
+
+## 全画面の展示レイアウト
+
+Homeと個別作品ページは作品をビューポート全体に表示します。ヘッダーは作品上のロゴ・Discover・Shuffle（個別作品ではHome）のみ。共通フッターは置かず、左下にDayとタイトル、右下にレジストリの `instructions` を表示します。作品コンポーネントのルート要素は共通ラッパー内で画面全体に広がります。
+
+UIのリンク・ボタンだけがポインター入力を受け取り、ヘッダーの余白や操作説明は作品へ入力を通します。操作説明は作品ごとに更新してください。Discoverは通常のヘッダー・一覧・フッターを維持します。

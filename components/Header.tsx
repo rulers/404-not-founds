@@ -2,19 +2,25 @@ import Link from "next/link";
 
 export default function Header({
   discover = false,
+  immersive = false,
   shuffle,
 }: {
   discover?: boolean;
+  immersive?: boolean;
   shuffle?: () => void;
 }) {
   return (
-    <header className="site-header">
+    <header
+      className={immersive ? "site-header site-header-overlay" : "site-header"}
+    >
       <Link href="/" className="wordmark" aria-label="404 NOT FOUNDS — Home">
         404
         <span className="wordmark-divider" />
         NOT FOUNDS<span className="wordmark-dot">®</span>
       </Link>
-      <span className="header-note">AN EXPERIMENT IN NONEXISTENCE</span>
+      {!immersive && (
+        <span className="header-note">AN EXPERIMENT IN NONEXISTENCE</span>
+      )}
       <nav aria-label="Main navigation">
         <Link
           href="/discover/"

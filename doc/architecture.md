@@ -23,9 +23,17 @@ Day 001はCSSとPointer Eventsで成立するため、Three.jsやGLSLは導入�
 
 ## 作品レジストリ
 
-`Artwork` は `id`、`title`、`category`、`createdAt`、`description`、`thumbnail`、任意の `theme`、`component` を持つ。componentは引数なしのReactコンポーネント。IDは一意の3桁文字列とし、既存IDは永続的に扱う。
+`Artwork` は `id`、`title`、`category`、`createdAt`、`description`、`instructions`、`thumbnail`、任意の `theme`、`component` を持つ。componentは引数なしのReactコンポーネント。IDは一意の3桁文字列とし、既存IDは永続的に扱う。
 
 同じ配列からHome、Discover、静的URLを構築する。`createdAt` は記録用であり公開予約の判定には使わない。配列に登録した作品はすべて公開対象。現時点ではコンポーネントを明示的にimportする。大量の重い作品を追加する際は、計測に基づいて遅延ロードを検討する。
+
+## 全画面レイアウトと入力
+
+Homeと個別ページのGalleryは `100dvh`（フォールバック `100svh`）の展示空間とし、作品のラッパーを全面に配置する。共通フッターと展示上部の状態表示は置かない。
+
+Headerは `immersive` 指定時だけロゴ・Discover・ShuffleまたはHomeを絶対配置で重ねる。左下にDayとタイトル、右下にレジストリの `instructions` を表示する。共通UIのコンテナは `pointer-events: none`、リンク・ボタンだけ `auto` として、非操作領域から作品へクリック・タップ・移動を通す。ナビゲーションの実際のコントロールを操作しても作品のクリックは発生しない。
+
+画面端の余白にはsafe-areaを考慮し、狭い画面では文字サイズと折り返しを調整する。作品の文字サイズも画面の高さを上限にし、横向きで共通UIと重なりにくくする。Discoverでは通常のHeaderを使い、一覧とフッターを維持する。UIの表示状態を管理する新しいstateやライブラリは使用しない。
 
 ## 日替わりとShuffle
 
@@ -37,7 +45,7 @@ Shuffleは2件以上なら現在以外のindexを選ぶ。1件なら0を返し�
 
 ## テーマ
 
-`theme: "dark" | "light"` をレジストリに指定する。未指定はdark。Galleryの `data-theme` とCSS変数で、展示・ヘッダー・フッター・ボタン・ページ背景をまとめて切り替える。
+`theme: "dark" | "light"` をレジストリに指定する。未指定はdark。Galleryの `data-theme` とCSS変数で、展示・ヘッダー・下部の作品情報・ボタン・ページ背景をまとめて切り替える。
 
 | 変数                                 | 用途                           |
 | ------------------------------------ | ------------------------------ |

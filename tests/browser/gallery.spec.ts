@@ -87,3 +87,63 @@ test("narrow phone layout keeps navigation and collection within viewport", asyn
     ),
   ).toBe(true);
 });
+
+test("immersive UI fills the viewport and passes non-actionable areas to the artwork", async ({
+  page,
+}, info) => {
+  for (const route of ["./", "404/001/"]) {
+    await page.goto(route);
+    const stage = page.locator(".glitch-stage");
+    await expect(stage).toBeVisible();
+    await expect(page.locator(".gallery-shell footer")).toHaveCount(0);
+    await expect(page.locator(".gallery-shell .header-note")).toHaveCount(0);
+    const box = (await stage.boundingBox())!;
+    const viewport = await page.evaluate(() => ({
+      width: innerWidth,
+      height: innerHeight,
+    }));
+    expect(box.x).toBe(0);
+    expect(box.y).toBe(0);
+    expect(box.width).toBe(viewport.width);
+    expect(box.height).toBe(viewport.height);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollHeight <= innerHeight,
+      ),
+    ).toBe(true);
+
+    const hint = (await page.locator(".interaction-hint").boundingBox())!;
+    const wordmark = (await page.locator(".wordmark").boundingBox())!;
+    const nav = (await page.getByRole("navigation").boundingBox())!;
+    const points = [
+      { x: hint.x + hint.width / 2, y: hint.y + hint.height / 2 },
+      {
+        x: (wordmark.x + wordmark.width + nav.x) / 2,
+        y: wordmark.y + wordmark.height / 2,
+      },
+    ];
+    for (const point of points) {
+      expect(
+        await page.evaluate(
+          ({ x, y }) =>
+            Boolean(document.elementFromPoint(x, y)?.closest(".glitch-stage")),
+          point,
+        ),
+      ).toBe(true);
+      if (info.project.name === "mobile")
+        await page.touchscreen.tap(point.x, point.y);
+      else await page.mouse.click(point.x, point.y);
+      await expect(stage).toHaveAttribute("data-burst", "true");
+      await expect(stage).toHaveAttribute("data-burst", "false");
+    }
+    if (route !== "./") {
+      await page.getByRole("link", { name: /^HOME/ }).click();
+      await expect(page.getByRole("button", { name: "SHUFFLE" })).toBeVisible();
+    }
+    await page.getByRole("link", { name: /DISCOVER/ }).click();
+    await expect(page.locator(".discover-footer")).toBeVisible();
+    await expect(
+      page.locator(".discover-shell .site-header-overlay"),
+    ).toHaveCount(0);
+  }
+});

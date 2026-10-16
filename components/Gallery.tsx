@@ -47,15 +47,8 @@ export default function Gallery({ artworkId }: { artworkId?: string }) {
   }
   return (
     <div className="gallery-shell" data-theme={artwork.theme ?? "dark"}>
-      <Header shuffle={artworkId ? undefined : shuffle} />
+      <Header immersive shuffle={artworkId ? undefined : shuffle} />
       <main className="exhibition">
-        <div className="exhibition-topline">
-          <span>
-            <span className="live-dot" />{" "}
-            {artworkId ? "NOW EXHIBITING" : "TODAY’S NONEXISTENCE"}
-          </span>
-          <span>{artwork.id} — 365</span>
-        </div>
         <div className="artwork-wrap">
           <Art key={`${artwork.id}-${edition}`} />
         </div>
@@ -67,33 +60,10 @@ export default function Gallery({ artworkId }: { artworkId?: string }) {
                 {artwork.title} <span>↗</span>
               </Link>
             </h1>
-            <span className="category-tag">{artwork.category}</span>
           </div>
-          <p className="interaction-hint">
-            <span className="crosshair" aria-hidden="true">
-              ⌖
-            </span>{" "}
-            MOVE TO DISTORT <span className="hint-divider">/</span> CLICK OR TAP
-            TO DISRUPT
-          </p>
+          <p className="interaction-hint">{artwork.instructions}</p>
         </div>
       </main>
-      <footer className="site-footer">
-        <p>
-          A collection of things
-          <br className="mobile-break" /> that shouldn’t exist.
-        </p>
-        <div className="project-progress">
-          <span>365 DAYS OF NOTHING</span>
-          <span className="progress-track">
-            <i style={{ width: `${(artworks.length / 365) * 100}%` }} />
-          </span>
-          <span>{String(artworks.length).padStart(3, "0")} / 365</span>
-        </div>
-        <span className="footer-location">
-          SOMEWHERE ON THE INTERNET <span>↗</span>
-        </span>
-      </footer>
     </div>
   );
 }

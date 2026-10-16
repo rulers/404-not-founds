@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "404 NOT FOUND — 365 Days of Nothing",
-    template: "%s — 404 NOT FOUND",
+    default: "404 NOT FOUNDS — 365 Days of Nothing",
+    template: "%s — 404 NOT FOUNDS",
   },
   description:
     "A collection of things that shouldn’t exist. 365 interactive 404 artworks. A new absence, every day.",

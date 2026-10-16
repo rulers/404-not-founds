@@ -9,10 +9,10 @@ export default function Header({
 }) {
   return (
     <header className="site-header">
-      <Link href="/" className="wordmark" aria-label="404 NOT FOUND — Home">
+      <Link href="/" className="wordmark" aria-label="404 NOT FOUNDS — Home">
         404
         <span className="wordmark-divider" />
-        NOT FOUND<span className="wordmark-dot">®</span>
+        NOT FOUNDS<span className="wordmark-dot">®</span>
       </Link>
       <span className="header-note">AN EXPERIMENT IN NONEXISTENCE</span>
       <nav aria-label="Main navigation">

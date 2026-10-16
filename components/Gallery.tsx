@@ -46,7 +46,7 @@ export default function Gallery({ artworkId }: { artworkId?: string }) {
     setEdition((current) => current + 1);
   }
   return (
-    <div className="gallery-shell">
+    <div className="gallery-shell" data-theme={artwork.theme ?? "dark"}>
       <Header shuffle={artworkId ? undefined : shuffle} />
       <main className="exhibition">
         <div className="exhibition-topline">

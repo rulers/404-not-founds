@@ -1,6 +1,6 @@
-# 404 NOT FOUND — 365 Days of Nothing
+# 404 NOT FOUNDS — 365 Days of Nothing
 
-毎日作る404 not found。**A collection of things that shouldn’t exist.**
+毎日作る404 not founds。**A collection of things that shouldn’t exist.**
 
 Next.js App Router / TypeScript / CSSによる静的インタラクティブアートギャラリー。
 Day 001はCSSのRGB分離、スキャンライン、ノイズ、水平スライスで構成し、Three.js・DB・API・外部フォントは使用していません。
@@ -72,6 +72,7 @@ import YourArtwork from "@/components/artworks/YourArtwork";
   createdAt: "2026-10-18",
   description: "A short description.",
   thumbnail: "/thumbnails/002.svg",
+  theme: "light", // 白背景・黒文字。省略または "dark" で黒背景
   component: YourArtwork,
 },
 ```
@@ -110,3 +111,10 @@ http://localhost:3000/404-not-founds/ を開きます。テストサーバーは
 - 同じActions環境変数で `/404-not-founds/` 配下のブラウザテスト: PC／モバイル合計8件成功。320px幅の横はみ出しも検証。
 - ブラウザは環境に導入済みのChromiumを `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` で指定。通常・CIではPlaywrightが導入するChromiumを使用。
 - PC／モバイルのスクリーンショットでレイアウトを確認。GitHubへのpush・実際のPagesデプロイは未実施。
+
+
+## 作品ごとの背景テーマ
+
+レジストリの `theme: "light"` で、Homeと個別作品ページの背景・文字・ナビゲーション・罫線・ボタンを明るい配色にします。`"dark"` または省略で黒背景です。作品の切り替えに合わせてテーマも変わり、Discoverに移動すると通常の黒背景に戻ります。端末のダークモード設定には左右されません。
+
+作品内もテーマに合わせたい場合はCSSの `var(--bg)`（背景）、`var(--fg)`（文字）、`var(--muted)`（補助文字）、`var(--line)`（罫線）、`var(--acid)`（アクセント）を使ってください。作品独自の色は自由に指定できます。ページ全体をCSSフィルターで反転しないため、画像やRGB演出の色は保たれます。Day 001は `theme: "dark"` です。

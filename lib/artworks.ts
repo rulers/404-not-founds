@@ -8,6 +8,8 @@ export type Artwork = {
   createdAt: string;
   description: string;
   thumbnail: string;
+  /** Controls the whole exhibition, including navigation. Defaults to dark. */
+  theme?: "dark" | "light";
   component: ComponentType;
 };
 
@@ -20,6 +22,7 @@ export const artworks: readonly Artwork[] = [
     description:
       "A signal in search of a destination. Move closer. Break the silence.",
     thumbnail: "/thumbnails/001.svg",
+    theme: "dark",
     component: Glitch404,
   },
 ];

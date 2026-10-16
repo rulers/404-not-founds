@@ -4,8 +4,28 @@
   --muted: #858582;
   --line: #292929;
   --acid: #d5ff70;
+  --button-ink: #111;
+  --accent-ink: #090909;
+  --detail: #5e5e5b;
+  --soft-fg: #a7a7a0;
   color-scheme: dark;
 }
+/* Artwork themes affect the page canvas as well as the exhibition chrome.
+   The shell selector also provides a local fallback without :has support. */
+:root:has(.gallery-shell[data-theme="light"]),
+.gallery-shell[data-theme="light"] {
+  --bg: #f4f4f0;
+  --fg: #171717;
+  --muted: #64645f;
+  --line: #d0d0c8;
+  --acid: #356b00;
+  --button-ink: #f4f4f0;
+  --accent-ink: #fff;
+  --detail: #72726b;
+  --soft-fg: #484843;
+  color-scheme: light;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -36,7 +56,7 @@ button {
 }
 ::selection {
   background: var(--acid);
-  color: #090909;
+  color: var(--accent-ink);
 }
 :focus-visible {
   outline: 2px solid var(--acid);
@@ -48,7 +68,7 @@ button {
   left: 24px;
   z-index: 100;
   background: var(--acid);
-  color: #000;
+  color: var(--accent-ink);
   padding: 14px;
 }
 .skip-link:focus {
@@ -59,6 +79,8 @@ button {
   display: flex;
   flex-direction: column;
   padding: 0 48px;
+  background: var(--bg);
+  color: var(--fg);
 }
 .site-header {
   height: 104px;
@@ -80,7 +102,7 @@ button {
 .wordmark-divider {
   width: 1px;
   height: 18px;
-  background: #6e6e69;
+  background: var(--muted);
   margin: 0 10px;
 }
 .wordmark-dot {
@@ -135,7 +157,7 @@ button {
 }
 .shuffle-button {
   background: var(--fg);
-  color: #111;
+  color: var(--button-ink);
   border: 1px solid var(--fg);
   padding: 12px 18px;
   display: inline-flex;
@@ -147,6 +169,7 @@ button {
 }
 .shuffle-button:hover {
   background: var(--acid);
+  color: var(--accent-ink);
   border-color: var(--acid);
 }
 .shuffle-button > span {
@@ -177,7 +200,7 @@ button {
   height: 5px;
   background: var(--acid);
   border-radius: 50%;
-  box-shadow: 0 0 9px #d5ff7025;
+  box-shadow: 0 0 9px color-mix(in srgb, var(--acid) 15%, transparent);
 }
 .artwork-wrap {
   flex: 1;
@@ -208,7 +231,7 @@ button {
   position: absolute;
   width: 13px;
   height: 13px;
-  border-color: #494946;
+  border-color: var(--detail);
   border-style: solid;
   opacity: 0.65;
 }
@@ -237,7 +260,7 @@ button {
   left: 25px;
   top: 18px;
   font-size: 8px;
-  color: #5e5e5b;
+  color: var(--detail);
   letter-spacing: 1.5px;
 }
 .glitch-number {
@@ -335,7 +358,7 @@ button {
   bottom: 29px;
   left: 0;
   right: 0;
-  color: #7f7f7b;
+  color: var(--muted);
   font-size: 8px;
   letter-spacing: 2.2px;
   display: flex;
@@ -350,7 +373,7 @@ button {
 }
 .signal-caption i {
   font-style: normal;
-  color: #494946;
+  color: var(--detail);
   margin: 0 5px;
 }
 .glitch-stage[data-burst="true"] .number-base {
@@ -387,7 +410,7 @@ button {
   gap: 20px;
 }
 .day-label {
-  color: #858582;
+  color: var(--muted);
   font-size: 10px;
   white-space: nowrap;
 }
@@ -399,22 +422,22 @@ button {
 }
 .artwork-identity h1 span {
   font-size: 14px;
-  color: #666;
+  color: var(--muted);
   margin-left: 8px;
 }
 .artwork-identity h1 a:hover {
   color: var(--acid);
 }
 .category-tag {
-  border: 1px solid #333;
+  border: 1px solid var(--line);
   padding: 5px 8px;
   font-size: 8px;
   text-transform: uppercase;
-  color: #9b9b96;
+  color: var(--muted);
   letter-spacing: 0.8px;
 }
 .interaction-hint {
-  color: #858582;
+  color: var(--muted);
   font-size: 8px;
   display: flex;
   align-items: center;
@@ -422,10 +445,10 @@ button {
 }
 .crosshair {
   font-size: 19px;
-  color: #b5b5ad;
+  color: var(--soft-fg);
 }
 .hint-divider {
-  color: #41413d;
+  color: var(--line);
   margin: 0 5px;
 }
 .site-footer {
@@ -440,7 +463,7 @@ button {
   margin: 0;
   font-size: 12px;
   letter-spacing: -0.2px;
-  color: #a7a7a0;
+  color: var(--soft-fg);
 }
 .mobile-break {
   display: none;
@@ -449,14 +472,14 @@ button {
   display: flex;
   align-items: center;
   gap: 18px;
-  color: #858582;
+  color: var(--muted);
   font-size: 8px;
   letter-spacing: 0.7px;
 }
 .progress-track {
   height: 2px;
   width: 90px;
-  background: #2a2a27;
+  background: var(--line);
 }
 .progress-track i {
   display: block;
@@ -465,12 +488,12 @@ button {
   min-width: 3px;
 }
 .footer-location {
-  color: #676761;
+  color: var(--detail);
   font-size: 8px;
   letter-spacing: 0.6px;
 }
 .footer-location > span {
-  color: #acaca4;
+  color: var(--soft-fg);
   margin-left: 8px;
 }
 @keyframes base-drift {
@@ -710,7 +733,7 @@ button {
   left: 17px;
   top: 16px;
   font-size: 8px;
-  color: #858582;
+  color: var(--muted);
 }
 .card-open {
   position: absolute;

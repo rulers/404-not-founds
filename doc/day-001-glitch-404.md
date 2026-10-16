@@ -26,7 +26,7 @@
 
 同じ「404」を複数のspanに重ねる。ベースの文字、赤チャンネル、シアンチャンネル、3つの水平スライスを `clip-path`・transform・text-shadow・段階的なkeyframesで変形する。約7秒／9秒の異なる周期を組み合わせ、短い区間だけズレを見せる。
 
-スキャンラインはrepeating-linear-gradient。ノイズは埋め込みSVGのfeTurbulenceを静的なテクスチャとして使い、強さでopacityを変える。Three.js・Canvas・GLSL・外部素材への通信は使わない。
+スキャンラインはrepeating-linear-gradient。ノイズは埋め込みSVGのfeTurbulenceを静的なテクスチャとして使い、強さでopacityを変える。`background-clip: text` でノイズを404の文字部分に限定し、クリック時も背景を黒のまま保つ。入力面の背景は `--bg` を明示し、ブラウザ標準のbuttonの外観も無効にする。Three.js・Canvas・GLSL・外部素材への通信は使わない。
 
 Pointer Eventsで領域内の座標を百分率に変換し、中心からの距離で強度を求める。`useRef` とrequestAnimationFrameを使って `--x`、`--y`、`--split`、`--interference` のCSS変数を更新する。移動ごとのReact再レンダリングを避ける。
 

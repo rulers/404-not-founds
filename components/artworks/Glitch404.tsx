@@ -74,9 +74,9 @@ export default function Glitch404() {
         <span className="slice slice-one">404</span>
         <span className="slice slice-two">404</span>
         <span className="slice slice-three">404</span>
+        <span className="noise">404</span>
       </span>
       <span className="scanlines" aria-hidden="true" />
-      <span className="noise" aria-hidden="true" />
       <span className="impact" aria-hidden="true" />
       <span className="signal-caption" aria-hidden="true">
         <span /> SIGNAL UNSTABLE <i>—</i> NOTHING TO SEE HERE

@@ -73,4 +73,4 @@ Workflowの処理順は以下。
 
 ## 記録を更新する場面
 
-新作品は `doc/day-NNN-title.md` と目次、共通の設計はarchitecture、開発・公開手順はこの文書を更新する。READMEは入口と起動・追加手順を保つ。開発ルールが変わったらAgent.mdとSkill.mdも整合させる。
+新作品は `doc/day-NNN-title.md` と目次、共通の設計はarchitecture、開発・公開手順はこの文書を更新する。READMEは入口と起動・追加手順を保つ。開発ルールが変わったらAGENTS.mdとSkill.mdも整合させる。

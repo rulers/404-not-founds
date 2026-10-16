@@ -7,7 +7,7 @@
 - [プロジェクトと各ページのコンセプト](concept.md)
 - [技術構成と設計](architecture.md)
 - [開発・検証・公開](development.md)
-- [開発ルール](../Agent.md)
+- [開発ルール](../AGENTS.md)
 - [作業手順](../Skill.md)
 
 ## 公開作品

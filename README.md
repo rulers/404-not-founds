@@ -125,9 +125,8 @@ http://localhost:3000/404-not-founds/ を開きます。テストサーバーは
 ## 開発ドキュメント
 
 - [doc/README.md](doc/README.md): ページ・作品・技術の記録の目次
-- [Agent.md](Agent.md): 今後の開発で守る設計・品質・mainへのpush方針
+- [AGENTS.md](AGENTS.md): エージェントが自動検出する開発ルール。設計・品質・mainへのpush方針を集約
 - [Skill.md](Skill.md): 作品追加・共通ベース変更・検証・公開の手順
-- [AGENTS.md](AGENTS.md): エージェントが自動検出する上記ルールへの入口
 
 CIは整形チェック・lint・単体テスト・型チェック・ビルド・ブラウザテストを通過してからデプロイします。
 

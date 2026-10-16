@@ -1,10 +1,10 @@
 # Gallery development workflow
 
-このリポジトリのベースを使った開発の実行手順です。自動導入される外部プラグインではなく、[Agent.md](Agent.md) に基づくローカルの作業ガイドです。
+このリポジトリのベースを使った開発の実行手順です。自動導入される外部プラグインではなく、[AGENTS.md](AGENTS.md) に基づくローカルの作業ガイドです。
 
 ## 作業開始
 
-1. `AGENTS.md` → `Agent.md` → 関連する `doc/` の文書を読む。
+1. `AGENTS.md` → 関連する `doc/` の文書を読む。
 2. `git status --short`、`git diff`、`git branch --show-current`、`git remote -v` を確認する。
 3. READMEの起動方法と `package.json` を確認し、依存が未導入なら `npm ci` を実行する。
 4. 既存のコンポーネント・CSS変数・レジストリを使える範囲を確認してから編集する。

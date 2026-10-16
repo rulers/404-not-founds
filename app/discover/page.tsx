@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/Header";
 import { artworks, assetPath } from "@/lib/artworks";
 
@@ -45,10 +46,10 @@ export default function Discover() {
           {artworks.map((art) => (
             <Link href={`/404/${art.id}/`} className="art-card" key={art.id}>
               <div className="thumbnail">
-                <img
+                <Image
                   src={assetPath(art.thumbnail)}
-                  width="900"
-                  height="600"
+                  width={900}
+                  height={600}
                   alt={`${art.title} — Day ${art.id} preview`}
                 />
                 <span className="thumbnail-day">DAY {art.id}</span>

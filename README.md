@@ -17,6 +17,8 @@ npm run dev
 http://localhost:3000 を開きます。
 
 ```sh
+npm run lint         # ESLint（警告0件）
+npm run lint:fix     # 自動修正
 npm test             # JST境界・決定論・Shuffle
 npm run typecheck
 npm run build        # 静的ファイルを out/ に生成
@@ -100,7 +102,7 @@ http://localhost:3000/404-not-founds/ を開きます。テストサーバーは
 
 `trailingSlash: true` と `generateStaticParams()` により、`out/discover/index.html`、`out/404/001/index.html` が作られます。404作品の `/404/` ディレクトリと不明URL用の `/404.html` は共存します。Actionsは必要なHTMLの存在を確認し、`.nojekyll` を置いて `out/` をアップロードします。SPA用の404リダイレクトは不要です。
 
-ブラウザテストはPC・モバイル、直接URL（スラッシュ有無）、サムネイル、操作、Shuffle、reduced-motion、キーボード、不明URLからの復帰を検証します。GitHub上の実デプロイ・実機Safari・Lighthouseスコアは別途確認が必要です。
+ブラウザテストはPC・モバイル、直接URL（スラッシュ有無）、サムネイル、操作、Shuffle、reduced-motion、キーボード、不明URLからの復帰を検証します。GitHub Pagesへの実デプロイは完了済みです。実機Safari・Lighthouseスコアは別途確認が必要です。
 
 ## MVP検証結果（2026-10-17 JST）
 
@@ -110,7 +112,7 @@ http://localhost:3000/404-not-founds/ を開きます。テストサーバーは
 - `GITHUB_ACTIONS=true GITHUB_REPOSITORY=rulers/404-not-founds npm run build`: 成功。リポジトリ名からbasePathを自動解決。
 - 同じActions環境変数で `/404-not-founds/` 配下のブラウザテスト: PC／モバイル合計8件成功。320px幅の横はみ出しも検証。
 - ブラウザは環境に導入済みのChromiumを `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` で指定。通常・CIではPlaywrightが導入するChromiumを使用。
-- PC／モバイルのスクリーンショットでレイアウトを確認。GitHubへのpush・実際のPagesデプロイは未実施。
+- PC／モバイルのスクリーンショットでレイアウトを確認。その後、GitHubへのpushと実際のPagesデプロイも成功。
 
 
 ## 作品ごとの背景テーマ
@@ -118,3 +120,13 @@ http://localhost:3000/404-not-founds/ を開きます。テストサーバーは
 レジストリの `theme: "light"` で、Homeと個別作品ページの背景・文字・ナビゲーション・罫線・ボタンを明るい配色にします。`"dark"` または省略で黒背景です。作品の切り替えに合わせてテーマも変わり、Discoverに移動すると通常の黒背景に戻ります。端末のダークモード設定には左右されません。
 
 作品内もテーマに合わせたい場合はCSSの `var(--bg)`（背景）、`var(--fg)`（文字）、`var(--muted)`（補助文字）、`var(--line)`（罫線）、`var(--acid)`（アクセント）を使ってください。作品独自の色は自由に指定できます。ページ全体をCSSフィルターで反転しないため、画像やRGB演出の色は保たれます。Day 001は `theme: "dark"` です。
+
+
+## 開発ドキュメント
+
+- [doc/README.md](doc/README.md): ページ・作品・技術の記録の目次
+- [Agent.md](Agent.md): 今後の開発で守る設計・品質・mainへのpush方針
+- [Skill.md](Skill.md): 作品追加・共通ベース変更・検証・公開の手順
+- [AGENTS.md](AGENTS.md): エージェントが自動検出する上記ルールへの入口
+
+CIはlint・単体テスト・型チェック・ビルド・ブラウザテストを通過してからデプロイします。

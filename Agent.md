@@ -25,10 +25,12 @@
 
 ## 品質と記録
 
+- Prettierを共通formatterとし、`npm run format:check` を通す。整形は `npm run format`。ESLintと競合する整形ルールは `eslint-config-prettier` で無効にする。
+
 - ESLintのCore Web Vitals・TypeScriptルールを適用し、`npm run lint` を警告0件で通す。
 - ルールを一括無効化して問題を隠さない。対象を絞った例外は静的サイトの制約など具体的な理由をコードに残す。
 - 変更に適した検証を実施する。ロジック変更には必要なテストを追加し、実装の写しや低影響の変更のためだけのテストを増やさない。
-- 公開前にlint、単体テスト、型チェック、basePath付きビルド、既存ブラウザテストを通す。CIも同じ検証を行う。
+- 公開前にformat:check、lint、単体テスト、型チェック、basePath付きビルド、既存ブラウザテストを通す。CIも同じ検証を行う。
 - 新作品は `doc/day-NNN-title.md` にコンセプト・操作・技術・配色・アクセシビリティ・制約を記録し、docの目次を更新する。
 - 共通の設計変更は `doc/architecture.md`、運用変更は `doc/development.md` と必要に応じてREADME・この文書へ反映する。
 - 検証済み事項と未確認事項を分ける。実サイトを閲覧できない場合、Actions成功を実サイトの表示確認と同一視しない。

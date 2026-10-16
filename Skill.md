@@ -29,6 +29,7 @@
 ## 検証
 
 ```sh
+npm run format:check
 npm run lint
 npm test
 npm run typecheck
@@ -38,6 +39,7 @@ NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
 
 ブラウザ未導入なら `npx playwright install chromium` を実行する。環境で提供されたChromiumを使う場合のみ `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` を指定する。ネットワーク・権限の制約があれば、回避せず未確認事項として記録する。
 
+- 整形には `npm run format` を使う。VS Codeでは推奨のPrettier・ESLint拡張を導入し、保存時整形とESLintの自動修正を利用する。
 - lintの修正候補には `npm run lint:fix` を使える。差分を必ず見直す。
 - PC、390px相当のモバイル、320px幅、直接URL、操作、reduced-motionを確認する。
 - CIではGitHubのリポジトリ名からbasePathを自動設定する。ローカルで明示指定したビルドと配信側のbasePathを揃える。

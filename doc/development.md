@@ -11,6 +11,19 @@ npm run dev
 
 http://localhost:3000 を開く。依存追加時はpackage.jsonとpackage-lock.jsonを一緒に更新する。秘密情報やローカル生成物はコミットしない。
 
+## FormatterとVS Code
+
+```sh
+npm run format       # Prettierで整形
+npm run format:check # 変更せず整形を検査
+```
+
+`.prettierrc.json` を共通の整形設定とし、`.prettierignore` で生成物・lockfileを除外する。Prettierのルールと競合するESLintの整形ルールは `eslint-config-prettier/flat` で止め、コード品質の検査は継続する。
+
+VS Codeは `.vscode/settings.json` により、保存時にPrettierで整形し、ESLintで検査・自動修正する。`.vscode/extensions.json` に挙げた `esbenp.prettier-vscode` と `dbaeumer.vscode-eslint` の拡張を導入し、`npm ci` を実行してから使用する。ユーザーのVS Codeへの拡張インストールは別途必要。
+
+ESLintの `source.fixAll.eslint: "always"` は明示的な保存と、VS Codeがサポートするフォーカス／ウィンドウ切替時のAuto Saveにも対応する。自動修正できない違反はProblemsで解決する。`eslint.run: "onSave"` は診断タイミングも保存時に揃える。保存操作そのものの動作はユーザーのVS Codeで確認する。
+
 ## Linter
 
 ```sh
@@ -25,6 +38,7 @@ lintはTypeScriptの型検査・ビルド・ブラウザテストを置き換え
 ## 検証コマンド
 
 ```sh
+npm run format:check
 npm run lint
 npm test
 npm run typecheck
@@ -49,7 +63,7 @@ NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
 Workflowの処理順は以下。
 
 1. checkout、Node.js 24、Pagesメタデータの確認。
-2. npm ci、lint、単体テスト、型チェック。
+2. npm ci、整形チェック、lint、単体テスト、型チェック。
 3. GitHubリポジトリ名からbasePathを導出してStatic Export。
 4. Chromiumを導入し、静的出力をPC・モバイル設定でテスト。
 5. 必須HTMLを確認して `.nojekyll` を配置し、outをartifact化。

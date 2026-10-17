@@ -47,7 +47,7 @@ npx playwright install chromium
 NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
 ```
 
-- 単体テスト: JST 0:00の境界、同一日の再現性、複数日の選択、単一作品、現在以外へのShuffle、空レジストリの拒否。
+- 単体テスト: 乱数の境界と全作品の選択、単一作品、現在以外へのShuffle、空レジストリの拒否。
 - ブラウザテスト: Home、Discover、個別作品、スラッシュ有無の直接URL、サムネイル、マウス・タッチ・キーボード、reduced-motion、Shuffle、404復帰、320px幅。
 - `typecheck` は `next typegen` を先に実行し、クリーン環境でもNext.jsの生成型を用意する。
 - ビルドとテストサーバーに同じbasePathを指定する。環境のChromiumを使うときだけ `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` 等を追加する。

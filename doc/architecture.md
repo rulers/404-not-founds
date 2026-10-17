@@ -8,18 +8,18 @@ Day 001はCSSとPointer Eventsで成立するため、Three.jsやGLSLは導入�
 
 ## 責務
 
-| ファイル                 | 責務                                           |
-| ------------------------ | ---------------------------------------------- |
-| `app/page.tsx`           | Homeの入口                                     |
-| `app/discover/page.tsx`  | レジストリから一覧を生成                       |
-| `app/404/[id]/page.tsx`  | 登録IDを静的生成し、固定作品を表示             |
-| `app/not-found.tsx`      | 実際の不明URLへの復帰画面                      |
-| `components/Gallery.tsx` | 作品選択・日替わり監視・展示レイアウト・テーマ |
-| `components/Header.tsx`  | Home・Discover・Shuffleの導線                  |
-| `components/artworks/`   | 個別のインタラクティブ作品                     |
-| `lib/artworks.ts`        | 作品の型・登録・publicアセットのbasePath補完   |
-| `lib/selection.ts`       | JST日付・決定論的選択・Shuffleの純粋関数       |
-| `app/globals.css`        | 共通レイアウト、テーマ、現時点のDay 001演出    |
+| ファイル                 | 責務                                         |
+| ------------------------ | -------------------------------------------- |
+| `app/page.tsx`           | Homeの入口                                   |
+| `app/discover/page.tsx`  | レジストリから一覧を生成                     |
+| `app/404/[id]/page.tsx`  | 登録IDを静的生成し、固定作品を表示           |
+| `app/not-found.tsx`      | 実際の不明URLへの復帰画面                    |
+| `components/Gallery.tsx` | 作品のランダム選択・展示レイアウト・テーマ   |
+| `components/Header.tsx`  | Home・Discover・Shuffleの導線                |
+| `components/artworks/`   | 個別のインタラクティブ作品                   |
+| `lib/artworks.ts`        | 作品の型・登録・publicアセットのbasePath補完 |
+| `lib/selection.ts`       | ランダム選択・Shuffleの純粋関数              |
+| `app/globals.css`        | 共通レイアウト、テーマ、現時点のDay 001演出  |
 
 ## 作品レジストリ
 
@@ -39,13 +39,11 @@ Headerは `immersive` 指定時だけロゴ・Discover・ShuffleまたはHomeを
 
 Day 002はCanvas 2Dで描画し、`lib/break404.ts` に盤面と物理を分離する。専用CSS Modulesによって他作品への影響を避ける。
 
-## 日替わりとShuffle
+## ランダム展示とShuffle
 
-ブラウザ時計を9時間進めたUTC日付からJSTの `YYYY-MM-DD` を作り、FNV-1aでハッシュして作品数の剰余で選ぶ。サーバーも乱数の保存も不要。同じ日付・同じレジストリなら同じ選択になる。
+Homeはマウントごとに `randomIndex()` で公開作品を均等に抽選する。再読み込み・他ページからの再訪でも再抽選し、同じ作品が続く可能性がある。個別URLは固定作品を表示する。表示中の日付・フォーカス・タブ復帰では抽選し直さない。
 
-Homeは初回マウント、1秒間隔、フォーカス復帰、visibilitychange、pointerdown、keydownで日付を確認する。日付が変わった時だけ選択stateを更新する。個別ページでは監視しない。イベントとintervalはアンマウント時に解除する。
-
-Shuffleは2件以上なら現在以外のindexを選ぶ。1件なら0を返し、作品を再マウントする。日付が変わるか再読み込みするまでは手動選択を維持する。レジストリの件数・順序を変えると同じ日でも選択が変わり得る。端末時計の誤りも選択日に影響する。
+抽選はuseEffectで実行し、静的HTMLと初回クライアント描画を一致させる。Shuffleは2件以上なら現在以外、1件なら同じ作品を再マウントする。保存領域や追加ライブラリは使わない。
 
 ## テーマ
 

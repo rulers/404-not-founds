@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { artworks } from "@/lib/artworks";
-import { dailyIndex, jstDateKey, shuffleIndex } from "@/lib/selection";
+import { randomIndex, shuffleIndex } from "@/lib/selection";
 
 export default function Gallery({ artworkId }: { artworkId?: string }) {
   const [index, setIndex] = useState(() =>
@@ -14,29 +14,11 @@ export default function Gallery({ artworkId }: { artworkId?: string }) {
     ),
   );
   const [edition, setEdition] = useState(0);
-  const day = useRef("");
   useEffect(() => {
     if (artworkId) return;
-    const update = () => {
-      const today = jstDateKey();
-      if (today !== day.current) {
-        day.current = today;
-        setIndex(dailyIndex(artworks.length));
-      }
-    };
-    update();
-    const interval = setInterval(update, 1000);
-    window.addEventListener("focus", update);
-    window.addEventListener("pointerdown", update);
-    window.addEventListener("keydown", update);
-    document.addEventListener("visibilitychange", update);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("focus", update);
-      window.removeEventListener("pointerdown", update);
-      window.removeEventListener("keydown", update);
-      document.removeEventListener("visibilitychange", update);
-    };
+    // Pick after hydration so static HTML and the first client render agree.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Choose a fresh artwork on each Home mount without hydration mismatch.
+    setIndex(randomIndex(artworks.length));
   }, [artworkId]);
 
   const artwork = artworks[index];

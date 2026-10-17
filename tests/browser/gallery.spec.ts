@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
-  await page.clock.setFixedTime(new Date("2026-10-17T03:00:00Z"));
+  await page.addInitScript(() => {
+    Math.random = () => Number(sessionStorage.getItem("testRandom") ?? "0");
+  });
 });
 
 test("home, interaction, shuffle, discover and direct artwork URL", async ({
@@ -152,4 +154,26 @@ test("immersive UI fills the viewport and passes non-actionable areas to the art
       page.locator(".discover-shell .site-header-overlay"),
     ).toHaveCount(0);
   }
+});
+
+test("Home draws again on reload and on return from a fixed artwork", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
+  await page.evaluate(() => sessionStorage.setItem("testRandom", "0.99"));
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "BREAK THE 404" }),
+  ).toBeVisible();
+  await page.goto("404/001/");
+  await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
+  await page.getByRole("link", { name: /^HOME/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "BREAK THE 404" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: /DISCOVER/ }).click();
+  await page.evaluate(() => sessionStorage.setItem("testRandom", "0"));
+  await page.getByRole("link", { name: /^HOME/ }).click();
+  await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
 });

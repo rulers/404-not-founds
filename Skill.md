@@ -23,7 +23,7 @@
 
 1. `Gallery.tsx`・`Header.tsx`・`app/globals.css`・`lib/selection.ts` の責務を [architecture.md](doc/architecture.md) で確認する。
 2. Home、作品ページ、Discover、不明URLで意図しない影響がないか確認する。
-3. 日替わり・Shuffleのロジック変更には複数作品を想定したテストを使う。単一作品の画面だけで判断しない。
+3. ランダム選択・Shuffleのロジック変更には複数作品を想定したテストを使う。単一作品の画面だけで判断しない。
 4. テーマ変更ではヘッダー・ボタン・補助文字・フォーカス・ページ背景まで読めること、Discoverで黒背景に戻ることを確認する。
 
 ## 検証

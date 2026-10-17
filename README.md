@@ -23,7 +23,7 @@ npm run format       # Prettierで整形
 npm run format:check # 整形チェック
 npm run lint         # ESLint（警告0件）
 npm run lint:fix     # 自動修正
-npm test             # JST境界・決定論・Shuffle・ゲーム物理
+npm test             # ランダム選択・Shuffle・ゲーム物理
 npm run typecheck
 npm run build        # 静的ファイルを out/ に生成
 npx playwright install chromium  # ブラウザ未導入の場合
@@ -34,7 +34,7 @@ npm run test:e2e     # 静的出力をPC・モバイルで検証
 
 ```text
 app/
-  page.tsx               Home（日替わり作品）
+  page.tsx               Home（アクセスごとにランダム）
   discover/page.tsx      公開作品一覧
   404/[id]/page.tsx      全登録作品をビルド時に静的生成
   not-found.tsx          実際の不明URL用 → out/404.html
@@ -47,22 +47,22 @@ components/
 lib/
   artworks.ts           型付き作品レジストリ・アセットパス
   break404.ts           Day 002の盤面・物理
-  selection.ts          JST日付・日替わり選択・Shuffle
+  selection.ts          ランダム選択・Shuffle
 public/thumbnails/001.svg
 public/thumbnails/002.svg
 .github/workflows/deploy.yml
 ```
 
-## 操作・日替わり
+## 操作・ランダム展示
 
 - カーソルが作品中央に近づくほどRGB分離・ノイズが強くなります。
 - クリック／タップで、その座標から波紋と約0.6秒の崩壊が発生。Enter／Spaceにも対応。
 - reduced-motionでは自動アニメーションを停止し、操作は短い色の変化で知らせます。
 - Pointer EventsとCSS変数で操作を処理し、マウス移動でReactを再レンダリングしません。RAF・タイマー・イベントはアンマウント時に解除します。
-- JSTの `YYYY-MM-DD` をFNV-1aでハッシュし、公開作品数で剰余を取ります。同一レジストリ・同一日なら全員同じ作品です。ブラウザ時計を使用するため、端末時計が不正な場合は選択日もずれます。
-- Homeは1秒ごとの日付確認、フォーカス復帰、タブ復帰、次のポインター／キーボード操作で更新します。個別作品ページは固定です。
-- Shuffleは2件以上なら現在以外の作品を選びます。1件なら同作品を再表示。日付変更まではその選択を保持し、再読み込みでは日替わり作品に戻ります。
-- レジストリの順序や件数が変わると、その日の選択も変わり得ます。全閲覧者で同じ公開バージョンが前提です。
+- Homeはアクセス・再読み込み・他ページから戻るたびに、公開作品からランダムに1件を表示します。独立した抽選なので同じ作品が続く場合もあります。
+- 画面表示中のフォーカス復帰や日付変更では切り替えません。個別URLは指定作品を固定表示します。
+- Shuffleは2件以上なら現在以外を選び、1件なら同作品を再表示します。
+- 静的HTMLとhydrationの一致を保つため、Homeの抽選はクライアントのマウント後に行います。
 
 ## 次の作品（Day 003）を追加する
 
@@ -87,7 +87,7 @@ import YourArtwork from "@/components/artworks/YourArtwork";
 },
 ```
 
-4. テスト・ビルドし公開します。Discover、作品数、日替わり、Shuffle、`/404/003/` の静的生成に自動反映されます。`createdAt` はメタデータであり予約公開機能ではありません。登録した作品はすべて公開対象です。IDは一意の3桁文字列にしてください。
+4. テスト・ビルドし公開します。Discover、作品数、ランダム展示、Shuffle、`/404/003/` の静的生成に自動反映されます。`createdAt` はメタデータであり予約公開機能ではありません。登録した作品はすべて公開対象です。IDは一意の3桁文字列にしてください。
 
 現状は小規模な明示的importです。作品が重くなった際にコンポーネントを個別に遅延ロードできます。カテゴリーは登録済みで、将来一覧のフィルターに利用できます。
 

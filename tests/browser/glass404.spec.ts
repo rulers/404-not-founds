@@ -13,14 +13,18 @@ test("whole-screen pane responds outside the old digits, scores, collapses and r
   await page.screenshot({
     path: `test-results/${info.project.name}-glass-world.png`,
   });
-  if (info.project.name === "mobile") {
-    await page.touchscreen.tap(x, y);
-    await page.touchscreen.tap(x, y);
-  } else {
-    await page.mouse.click(x, y);
-    await page.mouse.click(x, y);
+  // Jittered cell geometry changes how many quick hits a local joint needs.
+  for (
+    let hit = 0;
+    hit < 6 && Number(await stage.getAttribute("data-remaining")) === 100;
+    hit++
+  ) {
+    if (info.project.name === "mobile") await page.touchscreen.tap(x, y);
+    else await page.mouse.click(x, y);
   }
-  await expect(stage).toHaveAttribute("data-damage", "2");
+  expect(
+    Number(await stage.getAttribute("data-damage")),
+  ).toBeGreaterThanOrEqual(2);
   expect(Number(await stage.getAttribute("data-remaining"))).toBeLessThan(100);
   await stage.focus();
   for (

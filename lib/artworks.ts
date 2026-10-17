@@ -62,10 +62,9 @@ export const artworks: readonly Artwork[] = [
     category: "Material",
     createdAt: "2026-10-18",
     description: "Nothing holds its shape. Move closer. Pull gently. Let go.",
-    instructions:
-      "Move to ripple / Drag to stretch / Release to restore / Arrow keys to stir",
+    instructions: "Grab the ink / Pull, flick and let go / Arrow keys to stir",
     thumbnail: "/thumbnails/004.svg",
-    theme: "dark",
+    theme: "light",
     component: Liquid404,
   },
 ];

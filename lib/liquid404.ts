@@ -5,6 +5,8 @@ export type LiquidPoint = {
   restY: number;
   vx: number;
   vy: number;
+  group?: number;
+  grip?: number;
 };
 export type LiquidInput = {
   x: number;
@@ -29,7 +31,7 @@ const four = [
 function polygon(points: number[][]) {
   return points.flatMap(([x, y], i) => {
     const next = points[(i + 1) % points.length],
-      steps = Math.ceil(Math.hypot(next[0] - x, next[1] - y) / 22);
+      steps = Math.ceil(Math.hypot(next[0] - x, next[1] - y) / 38);
     return Array.from({ length: steps }, (_, j) => ({
       x: x + ((next[0] - x) * j) / steps,
       y: y + ((next[1] - y) * j) / steps,
@@ -46,10 +48,17 @@ export function createLiquid(): LiquidPoint[][] {
   return [
     polygon(four),
     oval(103, 174),
-    oval(43, 111),
+    oval(43, 111).reverse(),
     polygon(four.map(([x, y]) => [x + 600, y])),
-  ].map((loop) =>
-    loop.map((p) => ({ ...p, restX: p.x, restY: p.y, vx: 0, vy: 0 })),
+  ].map((loop, index) =>
+    loop.map((p) => ({
+      ...p,
+      restX: p.x,
+      restY: p.y,
+      vx: 0,
+      vy: 0,
+      group: index === 0 ? 0 : index === 3 ? 2 : 1,
+    })),
   );
 }
 export function liquidPath(loops: LiquidPoint[][]): string {
@@ -85,12 +94,23 @@ export function stepLiquid(
         ty += Math.cos(time * 0.65 + p.restX * 0.015) * 2.8;
       }
       if (input.dragging) {
-        const weight = Math.exp(
-          -((p.restX - input.anchorX) ** 2 + (p.restY - input.anchorY) ** 2) /
-            (2 * 125 ** 2),
-        );
-        tx += Math.max(-150, Math.min(150, input.x - input.anchorX)) * weight;
-        ty += Math.max(-120, Math.min(120, input.y - input.anchorY)) * weight;
+        const group = input.anchorX < 365 ? 0 : input.anchorX < 665 ? 1 : 2;
+        const weight =
+          p.grip ??
+          (p.group === group
+            ? Math.exp(
+                -(
+                  (p.restX - input.anchorX) ** 2 +
+                  (p.restY - input.anchorY) ** 2
+                ) /
+                  (2 * 130 ** 2),
+              )
+            : 0);
+        const dx = Math.max(-360, Math.min(360, input.x - input.anchorX)),
+          dy = Math.max(-280, Math.min(280, input.y - input.anchorY));
+        const stretch = Math.min(1, 350 / Math.max(1, Math.hypot(dx, dy)));
+        tx += dx * stretch * weight;
+        ty += dy * stretch * weight;
       } else if (input.active) {
         const dx = p.restX - input.x,
           dy = p.restY - input.y,
@@ -101,9 +121,9 @@ export function stepLiquid(
           ty += (dy / distance) * weight;
         }
       }
-      p.vx += (tx - p.x) * 48 * dt;
-      p.vy += (ty - p.y) * 48 * dt;
-      const damping = Math.exp(-(reduced ? 19 : 11) * dt);
+      p.vx += (tx - p.x) * (reduced ? 48 : 30) * dt;
+      p.vy += (ty - p.y) * (reduced ? 48 : 30) * dt;
+      const damping = Math.exp(-(reduced ? 17 : 7.5) * dt);
       p.vx *= damping;
       p.vy *= damping;
       p.x += p.vx * dt;
@@ -132,5 +152,33 @@ export function pulseLiquid(
       );
       p.vx += dx * 210 * weight;
       p.vy += dy * 210 * weight;
+    }
+}
+
+// 変形中の表面をつかみ直しても、指に近い同じ数字だけを保持する。
+export function grabLiquid(loops: LiquidPoint[][], x: number, y: number) {
+  let nearest = loops[0][0],
+    distance = Infinity;
+  for (const loop of loops)
+    for (const p of loop) {
+      const d = Math.hypot(p.x - x, p.y - y);
+      if (d < distance) {
+        nearest = p;
+        distance = d;
+      }
+    }
+  for (const loop of loops)
+    for (const p of loop)
+      p.grip =
+        p.group === nearest.group
+          ? 0.45 +
+            0.55 * Math.exp(-((p.x - x) ** 2 + (p.y - y) ** 2) / (2 * 130 ** 2))
+          : 0;
+}
+export function flingLiquid(loops: LiquidPoint[][], vx: number, vy: number) {
+  for (const loop of loops)
+    for (const p of loop) {
+      p.vx += Math.max(-900, Math.min(900, vx)) * (p.grip ?? 0) * 0.65;
+      p.vy += Math.max(-900, Math.min(900, vy)) * (p.grip ?? 0) * 0.65;
     }
 }

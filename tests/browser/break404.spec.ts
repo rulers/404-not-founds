@@ -179,10 +179,16 @@ test("tilt calibration, dead zone, rotation, sensor loss and re-enable", async (
   const stage = page.locator("[data-phase]");
   const send = async (gamma: number | null, beta = 0) => {
     await page.evaluate(
-      ({ gamma, beta }) =>
-        window.dispatchEvent(
-          new DeviceOrientationEvent("deviceorientation", { gamma, beta }),
-        ),
+      ({ gamma, beta }) => {
+        const sensor = window as Window & { mockTiltTimer?: number };
+        clearInterval(sensor.mockTiltTimer);
+        const emit = () =>
+          window.dispatchEvent(
+            new DeviceOrientationEvent("deviceorientation", { gamma, beta }),
+          );
+        emit();
+        sensor.mockTiltTimer = window.setInterval(emit, 50);
+      },
       { gamma, beta },
     );
   };
@@ -205,6 +211,11 @@ test("tilt calibration, dead zone, rotation, sensor loss and re-enable", async (
   await send(null, 30);
   await send(null, 55);
   await expect.poll(() => paddlePosition(page)).toBeLessThan(0.2);
+  await page.evaluate(() =>
+    clearInterval(
+      (window as Window & { mockTiltTimer?: number }).mockTiltTimer,
+    ),
+  );
   await expect(stage).toHaveAttribute("data-control", "touch");
   await page.getByRole("button", { name: "ENABLE TILT" }).tap();
   await send(null, 30);

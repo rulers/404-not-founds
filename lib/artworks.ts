@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import Glitch404 from "@/components/artworks/Glitch404";
 import Glass404 from "@/components/artworks/Glass404";
+import Liquid404 from "@/components/artworks/Liquid404";
 import Break404 from "@/components/artworks/Break404";
 
 export type Artwork = {
@@ -54,6 +55,18 @@ export const artworks: readonly Artwork[] = [
     thumbnail: "/thumbnails/003.svg",
     theme: "dark",
     component: Glass404,
+  },
+  {
+    id: "004",
+    title: "Liquid 404",
+    category: "Material",
+    createdAt: "2026-10-18",
+    description: "Nothing holds its shape. Move closer. Pull gently. Let go.",
+    instructions:
+      "Move to ripple / Drag to stretch / Release to restore / Arrow keys to stir",
+    thumbnail: "/thumbnails/004.svg",
+    theme: "dark",
+    component: Liquid404,
   },
 ];
 

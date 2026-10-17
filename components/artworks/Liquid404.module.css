@@ -8,12 +8,8 @@
   touch-action: none;
   text-align: left;
   cursor: grab;
-  background: radial-gradient(
-    ellipse at 50% 45%,
-    #1d292a 0%,
-    #101516 36%,
-    #090909 75%
-  );
+  background: #f0eee6;
+  color: #2537b0;
 }
 .stage[data-liquid-state="touching"] {
   cursor: grabbing;
@@ -24,79 +20,87 @@
 .field {
   position: absolute;
   left: 50%;
-  top: 47%;
+  top: 53%;
   transform: translate(-50%, -50%);
-  width: min(94%, 1120px, 145svh);
+  width: min(92%, 1080px, 135svh);
   aspect-ratio: 2;
   overflow: visible;
   pointer-events: none;
 }
-.kicker {
+.invitation {
   position: absolute;
-  top: max(112px, 18%);
-  left: var(--gallery-edge, 24px);
-  right: var(--gallery-edge, 24px);
-  display: flex;
-  justify-content: space-between;
-  color: #9bb8b6;
+  left: 7%;
+  top: 14%;
   font:
-    8px "Courier New",
-    monospace;
-  letter-spacing: 2px;
+    clamp(30px, 5.8vw, 76px)/0.83 Georgia,
+    serif;
+  letter-spacing: -0.065em;
   pointer-events: none;
+  color: #2133c4;
 }
-.kicker > span {
-  color: #6b8d8d;
+.invitation em {
+  font-weight: 400;
+}
+.note {
+  position: absolute;
+  right: 7%;
+  top: 19%;
+  font:
+    8px/1.8 "Courier New",
+    monospace;
+  letter-spacing: 1.5px;
+  text-align: right;
+  pointer-events: none;
+  color: #5961a5;
 }
 .caption {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 15%;
-  text-align: center;
+  right: 9%;
+  bottom: 18%;
   font:
-    9px "Courier New",
-    monospace;
-  letter-spacing: 3px;
-  color: #c4dbcf;
+    italic clamp(16px, 2.2vw, 28px) Georgia,
+    serif;
+  color: #3343b5;
   pointer-events: none;
 }
-.caption > span {
-  display: block;
-  margin-top: 16px;
-  font-size: 7px;
-  letter-spacing: 2px;
-  color: #8eaaa6;
-}
 @media (max-width: 600px) {
-  .field {
-    width: 108%;
-    top: 46%;
+  .invitation {
+    top: 16%;
+    left: 8%;
+    font-size: 48px;
   }
-  .kicker {
-    top: 112px;
-    font-size: 7px;
-    letter-spacing: 1px;
+  .note {
+    top: 19%;
+    right: 8%;
+    font-size: 6px;
+    letter-spacing: 0.6px;
+    max-width: 42%;
+  }
+  .field {
+    width: 110%;
+    top: 51%;
   }
   .caption {
-    bottom: 28%;
-    font-size: 8px;
-    letter-spacing: 1.4px;
-  }
-  .caption > span {
-    font-size: 6px;
-    letter-spacing: 1px;
+    bottom: 24%;
+    font-size: 18px;
+    right: 8%;
   }
 }
 @media (max-height: 500px) and (min-width: 601px) {
-  .kicker {
-    top: 88px;
+  .invitation {
+    top: 24%;
+    font-size: 36px;
+  }
+  .note {
+    top: 26%;
+    font-size: 6px;
+  }
+  .field {
+    top: 54%;
+    width: min(75%, 115svh);
   }
   .caption {
     bottom: 17%;
-  }
-  .field {
-    width: min(80%, 130svh);
-    top: 48%;
+    font-size: 15px;
   }
 }

@@ -25,13 +25,17 @@ test("Liquid 404 stretches with real mouse/touch input and returns to its contou
     });
     await session.send("Input.dispatchTouchEvent", {
       type: "touchMove",
-      touchPoints: [{ x: x + 40, y: y + 25 }],
+      touchPoints: [{ x: x + 120, y: y + 65 }],
     });
   } else {
     await page.mouse.move(x, y);
     await page.mouse.down();
-    await page.mouse.move(x + 60, y + 30, { steps: 8 });
+    await page.mouse.move(x + 245, y + 90, { steps: 8 });
   }
+  await expect(page.locator(".gallery-shell")).toHaveAttribute(
+    "data-theme",
+    "light",
+  );
   await expect(stage).toHaveAttribute("data-liquid-state", "touching");
   await expect(path).not.toHaveAttribute("d", original);
   const baseline = original.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
@@ -42,7 +46,7 @@ test("Liquid 404 stretches with real mouse/touch input and returns to its contou
         .map(Number);
       return Math.max(...numbers.map((n, i) => Math.abs(n - baseline[i])));
     })
-    .toBeGreaterThan(15);
+    .toBeGreaterThan(180);
   await page.screenshot({
     path: `test-results/${info.project.name}-liquid-stretched.png`,
   });
@@ -74,6 +78,7 @@ test("Liquid 404 stretches with real mouse/touch input and returns to its contou
   await page.getByRole("link", { name: /DISCOVER/ }).click();
   const card = page.getByRole("link", { name: /DAY 004/ });
   await expect(card.locator("img")).toHaveJSProperty("naturalWidth", 900);
+  await expect(page.locator(".gallery-shell")).toHaveCount(0);
   await card.click();
   await expect(stage).toBeVisible();
   expect(errors).toEqual([]);
@@ -132,4 +137,64 @@ test("Liquid 404 is visible with JavaScript disabled", async ({
   } finally {
     await context.close();
   }
+});
+
+test("a quick gesture sheds droplets, and navigation stays usable", async ({
+  page,
+}, info) => {
+  await page.goto("404/004/");
+  const stage = page.getByRole("button", { name: /Liquid 404:/ });
+  const box = (await page.locator("button svg").boundingBox())!,
+    x = box.x + box.width * 0.27,
+    y = box.y + box.height * 0.48;
+  if (info.project.name === "mobile") {
+    const session = await page.context().newCDPSession(page);
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x, y }],
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: x + 85, y: y - 50 }],
+    });
+    await expect
+      .poll(() =>
+        page
+          .locator("g[data-liquid-drops] circle")
+          .evaluateAll(
+            (nodes) =>
+              nodes.filter((n) => Number(n.getAttribute("r")) > 0).length,
+          ),
+      )
+      .toBeGreaterThan(0);
+    await page.screenshot({
+      path: `test-results/${info.project.name}-liquid-flick.png`,
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchCancel",
+      touchPoints: [],
+    });
+    await session.detach();
+  } else {
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 200, y - 100, { steps: 3 });
+    await expect
+      .poll(() =>
+        page
+          .locator("g[data-liquid-drops] circle")
+          .evaluateAll(
+            (nodes) =>
+              nodes.filter((n) => Number(n.getAttribute("r")) > 0).length,
+          ),
+      )
+      .toBeGreaterThan(0);
+    await page.screenshot({
+      path: `test-results/${info.project.name}-liquid-flick.png`,
+    });
+    await page.mouse.up();
+  }
+  await expect(stage).toHaveAttribute("data-liquid-state", "settling");
+  await page.getByRole("link", { name: /DISCOVER/ }).click();
+  await expect(page.locator(".discover-footer")).toBeVisible();
 });

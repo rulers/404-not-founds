@@ -6,18 +6,30 @@ import {
   liquidPath,
   pulseLiquid,
   stepLiquid,
+  grabLiquid,
+  flingLiquid,
   type LiquidInput,
 } from "@/lib/liquid404";
 import styles from "./Liquid404.module.css";
-
 const STILL = liquidPath(createLiquid());
+type Drop = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  homeX: number;
+  homeY: number;
+  age: number;
+  size: number;
+};
 export default function Liquid404() {
   const id = useId().replaceAll(":", "");
   const svg = useRef<SVGSVGElement>(null),
     surface = useRef<SVGPathElement>(null),
     rim = useRef<SVGPathElement>(null),
     clipping = useRef<SVGPathElement>(null),
-    shine = useRef<SVGRadialGradientElement>(null);
+    shine = useRef<SVGRadialGradientElement>(null),
+    beads = useRef<SVGGElement>(null);
   const input = useRef<LiquidInput>({
     x: -1000,
     y: -1000,
@@ -26,25 +38,51 @@ export default function Liquid404() {
     anchorX: 0,
     anchorY: 0,
   });
+  const previous = useRef({ x: 0, y: 0, time: 0, vx: 0, vy: 0 });
   const wake = useRef<() => void>(() => {}),
-    pulse = useRef<(dx: number, dy: number) => void>(() => {});
+    pulse = useRef<(dx: number, dy: number) => void>(() => {}),
+    grab = useRef<(x: number, y: number) => void>(() => {}),
+    fling = useRef<(vx: number, vy: number) => void>(() => {}),
+    spray = useRef<(x: number, y: number, vx: number, vy: number) => void>(
+      () => {},
+    );
   const [state, setState] = useState("resting");
   useEffect(() => {
-    const bodyElement = surface.current;
-    const rimElement = rim.current;
-    const clipElement = clipping.current;
-    const lightElement = shine.current;
-    if (!bodyElement || !rimElement || !clipElement || !lightElement) return;
+    const body = surface.current,
+      edge = rim.current,
+      clip = clipping.current,
+      light = shine.current,
+      dropletGroup = beads.current;
+    if (!body || !edge || !clip || !light || !dropletGroup) return;
     const loops = createLiquid(),
       motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const circles = Array.from({ length: 16 }, () => {
+      const circle = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle",
+      );
+      circle.setAttribute("fill", `url(#${id}-body)`);
+      circle.setAttribute("r", "0");
+      dropletGroup.append(circle);
+      return circle;
+    });
     let frame = 0,
       last = 0,
       clock = 0,
-      tickCount = 0,
-      settling = false;
-    const draw = (now: number) => {
+      tick = 0,
+      settling = false,
+      alive = true,
+      lastDrop = 0;
+    let drops: Drop[] = [];
+    const request = () => {
+      if (alive && !frame && !document.hidden) {
+        last = 0;
+        frame = requestAnimationFrame(draw);
+      }
+    };
+    function draw(now: number) {
       frame = 0;
-      if (document.hidden || !bodyElement.isConnected) return;
+      if (!alive || document.hidden || !body!.isConnected) return;
       const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
       last = now;
       clock += dt;
@@ -55,40 +93,89 @@ export default function Liquid404() {
         clock,
         motion.matches,
       );
-      // SVGの更新は通常約30fps。物理と入力処理をReactの描画から分離する。
-      if (++tickCount % 2 === 0 || motion.matches || input.current.dragging) {
+      if (++tick % 2 === 0 || motion.matches || input.current.dragging) {
         const d = liquidPath(loops);
-        bodyElement.setAttribute("d", d);
-        rimElement.setAttribute("d", d);
-        clipElement.setAttribute("d", d);
-        lightElement.setAttribute(
+        body!.setAttribute("d", d);
+        edge!.setAttribute("d", d);
+        clip!.setAttribute("d", d);
+        light!.setAttribute(
           "cx",
-          String(input.current.active ? input.current.x : 390),
+          String(input.current.active ? input.current.x : 350),
         );
-        lightElement.setAttribute(
+        light!.setAttribute(
           "cy",
-          String(input.current.active ? input.current.y : 160),
+          String(input.current.active ? input.current.y : 120),
+        );
+      }
+      drops = drops.filter((drop) => drop.age < 1.8 && !motion.matches);
+      for (let i = 0; i < circles.length; i++) {
+        const drop = drops[i],
+          circle = circles[i];
+        if (!drop) {
+          circle.setAttribute("r", "0");
+          continue;
+        }
+        drop.age += dt;
+        drop.vx += (drop.homeX - drop.x) * 8 * dt;
+        drop.vy += (drop.homeY - drop.y) * 8 * dt;
+        drop.vx *= Math.exp(-2.2 * dt);
+        drop.vy *= Math.exp(-2.2 * dt);
+        drop.x += drop.vx * dt;
+        drop.y += drop.vy * dt;
+        circle.setAttribute("cx", String(drop.x));
+        circle.setAttribute("cy", String(drop.y));
+        circle.setAttribute(
+          "r",
+          String(Math.max(0, drop.size * (1 - drop.age / 1.8))),
         );
       }
       if (
         !input.current.dragging &&
         settling &&
-        energy < (motion.matches ? 1 : 6)
+        energy < (motion.matches ? 1 : 6) &&
+        drops.length === 0
       ) {
         settling = false;
         setState("resting");
       }
-      if (!motion.matches || energy > 0.1) frame = requestAnimationFrame(draw);
-    };
-    const request = () => {
-      if (!frame && !document.hidden) {
-        last = 0;
+      if (!motion.matches || energy > 0.1 || drops.length)
         frame = requestAnimationFrame(draw);
-      }
-    };
+    }
     wake.current = () => {
       if (!input.current.dragging) settling = true;
       request();
+    };
+    grab.current = (x, y) => {
+      grabLiquid(loops, x, y);
+    };
+    fling.current = (vx, vy) => {
+      flingLiquid(
+        loops,
+        vx * (motion.matches ? 0.2 : 1),
+        vy * (motion.matches ? 0.2 : 1),
+      );
+      settling = true;
+      request();
+    };
+    spray.current = (x, y, vx, vy) => {
+      if (
+        motion.matches ||
+        Math.hypot(vx, vy) < 450 ||
+        performance.now() - lastDrop < 65
+      )
+        return;
+      lastDrop = performance.now();
+      if (drops.length >= 16) drops.shift();
+      drops.push({
+        x,
+        y,
+        vx: -vx * 0.16,
+        vy: -vy * 0.16,
+        homeX: input.current.anchorX,
+        homeY: input.current.anchorY,
+        age: 0,
+        size: 9 + Math.min(14, Math.hypot(vx, vy) / 100),
+      });
     };
     pulse.current = (dx, dy) => {
       pulseLiquid(
@@ -115,13 +202,18 @@ export default function Liquid404() {
     motion.addEventListener("change", request);
     request();
     return () => {
+      alive = false;
       cancelAnimationFrame(frame);
       document.removeEventListener("visibilitychange", visibility);
       motion.removeEventListener("change", request);
+      circles.forEach((circle) => circle.remove());
       wake.current = () => {};
       pulse.current = () => {};
+      grab.current = () => {};
+      fling.current = () => {};
+      spray.current = () => {};
     };
-  }, []);
+  }, [id]);
   function position(event: PointerEvent<HTMLButtonElement>) {
     const box = svg.current!.getBoundingClientRect();
     return {
@@ -133,6 +225,11 @@ export default function Liquid404() {
     if (input.current.dragging) {
       input.current.dragging = false;
       input.current.active = false;
+      const speed =
+        performance.now() - previous.current.time < 100
+          ? previous.current
+          : { vx: 0, vy: 0 };
+      fling.current(speed.vx, speed.vy);
       setState("settling");
       wake.current();
     }
@@ -142,7 +239,7 @@ export default function Liquid404() {
       type="button"
       className={styles.stage}
       data-liquid-state={state}
-      aria-label="Liquid 404: move near the surface, drag to stretch, release to restore. Enter, Space or arrow keys send a wave."
+      aria-label="Liquid 404: grab and drag the ink. Pull far, flick, and release to let it flow back. Enter, Space or arrow keys send a wave."
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         const p = position(event);
@@ -152,6 +249,7 @@ export default function Liquid404() {
           !surface.current.isPointInFill(new DOMPoint(p.x, p.y))
         )
           return;
+        grab.current(p.x, p.y);
         input.current = {
           ...input.current,
           ...p,
@@ -160,17 +258,35 @@ export default function Liquid404() {
           anchorX: p.x,
           anchorY: p.y,
         };
+        previous.current = { ...p, time: performance.now(), vx: 0, vy: 0 };
         event.currentTarget.setPointerCapture(event.pointerId);
         setState("touching");
         wake.current();
       }}
       onPointerMove={(event) => {
-        const p = position(event);
+        const p = position(event),
+          now = performance.now(),
+          last = previous.current,
+          dt = Math.max(0.008, (now - last.time) / 1000);
+        if (input.current.dragging) {
+          const vx = (p.x - last.x) / dt,
+            vy = (p.y - last.y) / dt;
+          previous.current = {
+            ...p,
+            time: now,
+            vx: last.vx * 0.35 + vx * 0.65,
+            vy: last.vy * 0.35 + vy * 0.65,
+          };
+          spray.current(p.x, p.y, vx, vy);
+        }
         Object.assign(input.current, p, { active: true });
         wake.current();
       }}
       onPointerUp={release}
-      onPointerCancel={release}
+      onPointerCancel={() => {
+        previous.current.vx = previous.current.vy = 0;
+        release();
+      }}
       onLostPointerCapture={release}
       onPointerLeave={() => {
         if (!input.current.dragging) {
@@ -194,15 +310,22 @@ export default function Liquid404() {
           ArrowUp: [0, -1],
           ArrowDown: [0, 1],
         };
-        const direction = directions[event.key];
-        if (direction) {
+        const d = directions[event.key];
+        if (d) {
           event.preventDefault();
-          pulse.current(...direction);
+          pulse.current(...d);
         }
       }}
     >
-      <span className={styles.kicker} aria-hidden="true">
-        MATERIAL STUDY / 004 <span>NO FIXED FORM.</span>
+      <span className={styles.invitation} aria-hidden="true">
+        nothing
+        <br />
+        <em>stays.</em>
+      </span>
+      <span className={styles.note} aria-hidden="true">
+        PULL IT OUT OF SHAPE.
+        <br />
+        IT KNOWS THE WAY BACK.
       </span>
       <svg
         ref={svg}
@@ -211,50 +334,38 @@ export default function Liquid404() {
         aria-hidden="true"
       >
         <defs>
-          <linearGradient id={`${id}-body`} x1="0" y1="0" x2=".15" y2="1">
-            <stop stopColor="#314f58" />
-            <stop offset=".12" stopColor="#b3d8d9" />
-            <stop offset=".28" stopColor="#314f5b" />
-            <stop offset=".42" stopColor="#ecfff6" />
-            <stop offset=".49" stopColor="#badfdf" />
-            <stop offset=".55" stopColor="#547778" />
-            <stop offset=".72" stopColor="#112b35" />
-            <stop offset=".87" stopColor="#93bec1" />
-            <stop offset="1" stopColor="#263d48" />
-          </linearGradient>
-          <linearGradient id={`${id}-edge`} x2="1" y2="1">
-            <stop stopColor="#ecfff6" />
-            <stop offset=".45" stopColor="#527c85" />
-            <stop offset=".8" stopColor="#bfded0" />
-            <stop offset="1" stopColor="#668091" />
-          </linearGradient>
+          <radialGradient id={`${id}-body`} cx=".25" cy=".15" r=".95">
+            <stop stopColor="#7b9fff" />
+            <stop offset=".35" stopColor="#4057f2" />
+            <stop offset="1" stopColor="#1723b8" />
+          </radialGradient>
           <radialGradient
             ref={shine}
             id={`${id}-light`}
             gradientUnits="userSpaceOnUse"
-            cx="390"
-            cy="160"
-            r="250"
+            cx="350"
+            cy="120"
+            r="230"
           >
-            <stop stopColor="#eefff8" stopOpacity=".5" />
-            <stop offset="1" stopColor="#c2e8e9" stopOpacity="0" />
+            <stop stopColor="#cfddff" stopOpacity=".45" />
+            <stop offset="1" stopColor="#7791ff" stopOpacity="0" />
           </radialGradient>
           <clipPath id={`${id}-clip`}>
-            <path ref={clipping} d={STILL} clipRule="evenodd" />
+            <path ref={clipping} d={STILL} clipRule="nonzero" />
           </clipPath>
           <filter
             id={`${id}-shadow`}
-            x="-20%"
-            y="-30%"
-            width="140%"
-            height="170%"
+            x="-30%"
+            y="-40%"
+            width="180%"
+            height="200%"
           >
             <feDropShadow
               dx="0"
               dy="18"
-              stdDeviation="15"
-              floodColor="#000"
-              floodOpacity=".65"
+              stdDeviation="12"
+              floodColor="#3233b0"
+              floodOpacity=".15"
             />
           </filter>
         </defs>
@@ -262,37 +373,28 @@ export default function Liquid404() {
           ref={surface}
           d={STILL}
           fill={`url(#${id}-body)`}
-          fillRule="evenodd"
-          stroke={`url(#${id}-edge)`}
-          strokeWidth="2"
+          fillRule="nonzero"
           filter={`url(#${id}-shadow)`}
         />
         <path
           ref={rim}
           d={STILL}
           fill="none"
-          stroke="#e9fff3"
-          strokeWidth=".7"
-          strokeOpacity=".5"
+          stroke="#bdceff"
+          strokeWidth="1"
+          strokeOpacity=".22"
         />
         <g clipPath={`url(#${id}-clip)`}>
           <path d="M0 0H1000V500H0Z" fill={`url(#${id}-light)`} />
-          <path
-            d="M40 198Q500 60 970 175"
-            fill="none"
-            stroke="#effff2"
-            strokeWidth="3"
-            opacity=".28"
-          />
         </g>
+        <g ref={beads} data-liquid-drops />
       </svg>
       <span className={styles.caption} role="status" aria-live="polite">
         {state === "touching"
-          ? "STAY A LITTLE LONGER."
+          ? "a little further."
           : state === "settling"
-            ? "FINDING ITS WAY BACK."
-            : "NOTHING HOLDS ITS SHAPE."}
-        <span>MOVE CLOSER. PULL GENTLY. LET GO.</span>
+            ? "let it find itself."
+            : "go on. get your hands messy."}
       </span>
     </button>
   );

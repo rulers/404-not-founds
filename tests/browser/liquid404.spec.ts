@@ -1,21 +1,24 @@
 import { test, expect } from "@playwright/test";
-
-test("Liquid 404 stretches with real mouse/touch input and returns to its contour", async ({
+test("real mouse/touch transports and splits the body; idle forms 404 which can be grabbed again", async ({
   page,
 }, info) => {
   const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("404/004/");
-  const stage = page.getByRole("button", { name: /Liquid 404:/ });
-  const path = page.locator("svg > path").first();
-  const original = (await path.getAttribute("d"))!;
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("404/004");
+  const stage = page.getByRole("button", { name: /Liquid 404:/ }),
+    field = page.locator("[data-renderer]");
+  await expect(field).toBeVisible();
+  await expect(stage).toHaveAttribute("data-liquid-state", "resting");
   await page.screenshot({
-    path: `test-results/${info.project.name}-liquid-whole.png`,
+    path: `test-results/${info.project.name}-liquid-pools.png`,
   });
-  const bounds = (await page.locator("button svg").boundingBox())!;
-  const x = bounds.x + (270 / 1000) * bounds.width,
-    y = bounds.y + (240 / 500) * bounds.height;
+  const bounds = (await field.boundingBox())!,
+    height = (bounds.height / bounds.width) * 1000;
+  const startX = Number(await stage.getAttribute("data-first-x")),
+    startY = Number(await stage.getAttribute("data-first-y"));
+  const x = bounds.x + (startX / 1000) * bounds.width,
+    y = bounds.y + (startY / height) * bounds.height,
+    end = x + bounds.width * 0.52;
   let session;
   if (info.project.name === "mobile") {
     session = await page.context().newCDPSession(page);
@@ -23,30 +26,27 @@ test("Liquid 404 stretches with real mouse/touch input and returns to its contou
       type: "touchStart",
       touchPoints: [{ x, y }],
     });
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [{ x: x + 120, y: y + 65 }],
-    });
   } else {
     await page.mouse.move(x, y);
     await page.mouse.down();
-    await page.mouse.move(x + 245, y + 90, { steps: 8 });
   }
-  await expect(page.locator(".gallery-shell")).toHaveAttribute(
-    "data-theme",
-    "light",
-  );
   await expect(stage).toHaveAttribute("data-liquid-state", "touching");
-  await expect(path).not.toHaveAttribute("d", original);
-  const baseline = original.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
+  for (let i = 1; i <= 18; i++) {
+    const next = x + ((end - x) * i) / 18;
+    if (session)
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: next, y }],
+      });
+    else await page.mouse.move(next, y);
+    await page.waitForTimeout(25);
+  }
   await expect
-    .poll(async () => {
-      const numbers = (await path.getAttribute("d"))!
-        .match(/-?\d+(?:\.\d+)?/g)!
-        .map(Number);
-      return Math.max(...numbers.map((n, i) => Math.abs(n - baseline[i])));
-    })
-    .toBeGreaterThan(180);
+    .poll(async () => Number(await stage.getAttribute("data-first-x")))
+    .toBeGreaterThan(startX + 350);
+  await expect
+    .poll(async () => Number(await stage.getAttribute("data-split")))
+    .toBeGreaterThan(0);
   await page.screenshot({
     path: `test-results/${info.project.name}-liquid-stretched.png`,
   });
@@ -57,49 +57,53 @@ test("Liquid 404 stretches with real mouse/touch input and returns to its contou
     });
     await session.detach();
   } else await page.mouse.up();
-  await expect(stage).toHaveAttribute("data-liquid-state", "settling");
-  await expect(stage).toHaveAttribute("data-liquid-state", "resting", {
-    timeout: 6000,
+  await expect(stage).toHaveAttribute("data-liquid-state", "resting");
+  await expect(stage).toHaveAttribute("data-liquid-state", "formed", {
+    timeout: 22000,
   });
-  await expect
-    .poll(
-      async () => {
-        const numbers = (await path.getAttribute("d"))!
-          .match(/-?\d+(?:\.\d+)?/g)!
-          .map(Number);
-        return Math.max(...numbers.map((n, i) => Math.abs(n - baseline[i])));
-      },
-      { timeout: 6000 },
-    )
-    .toBeLessThan(0.4);
+  await page.screenshot({
+    path: `test-results/${info.project.name}-liquid-formed.png`,
+  });
   await stage.focus();
+  await page.keyboard.press("Enter");
+  await expect(stage).toHaveAttribute("data-liquid-state", "touching");
   await page.keyboard.press("ArrowRight");
-  await expect(stage).toHaveAttribute("data-liquid-state", "settling");
+  await page.keyboard.press("Enter");
+  await expect(stage).toHaveAttribute("data-liquid-state", "resting");
   await page.getByRole("link", { name: /DISCOVER/ }).click();
-  const card = page.getByRole("link", { name: /DAY 004/ });
-  await expect(card.locator("img")).toHaveJSProperty("naturalWidth", 900);
+  await expect(
+    page.getByRole("link", { name: /DAY 004/ }).locator("img"),
+  ).toHaveJSProperty("naturalWidth", 900);
   await expect(page.locator(".gallery-shell")).toHaveCount(0);
-  await card.click();
-  await expect(stage).toBeVisible();
   expect(errors).toEqual([]);
 });
-
-test("hover ripples work without drag and cancel/resize preserve navigation", async ({
+test("WebGL-disabled Canvas fallback supports grab, cancellation, reduced motion and narrow layouts", async ({
   page,
 }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("404/004");
-  const stage = page.getByRole("button", { name: /Liquid 404:/ }),
-    path = page.locator("svg > path").first();
-  const before = (await path.getAttribute("d"))!;
-  const box = (await page.locator("button svg").boundingBox())!;
-  await stage.dispatchEvent("pointermove", {
-    clientX: box.x + box.width * 0.26,
-    clientY: box.y + box.height * 0.4,
-    pointerType: "mouse",
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
+      type: string,
+      ...args: unknown[]
+    ) {
+      if (type.startsWith("webgl")) return null;
+      return original.apply(this, [type, ...args] as Parameters<
+        typeof original
+      >);
+    } as typeof original;
   });
-  await expect(path).not.toHaveAttribute("d", before);
-  await stage.dispatchEvent("pointercancel");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("404/004/");
+  const stage = page.getByRole("button", { name: /Liquid 404:/ });
+  await expect(page.locator('[data-renderer="canvas"]')).toBeVisible();
+  await stage.focus();
+  await page.keyboard.press("Enter");
+  await expect(stage).toHaveAttribute("data-liquid-state", "touching");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Escape");
+  await expect(stage).toHaveAttribute("data-liquid-state", "resting");
+  await page.screenshot({ path: "test-results/liquid-canvas-fallback.png" });
   for (const size of [
     { width: 320, height: 740 },
     { width: 740, height: 360 },
@@ -119,82 +123,52 @@ test("hover ripples work without drag and cancel/resize preserve navigation", as
   await page.getByRole("link", { name: /DISCOVER/ }).click();
   await expect(page.locator(".discover-footer")).toBeVisible();
 });
-
-test("Liquid 404 is visible with JavaScript disabled", async ({
+test("no JavaScript retains initial pools and navigation", async ({
   page,
   browser,
 }) => {
   await page.goto("404/004/");
-  const url = page.url();
   const context = await browser.newContext({ javaScriptEnabled: false });
   try {
     const still = await context.newPage();
-    await still.goto(url);
-    await expect(still.locator("svg > path").first()).toBeVisible();
-    await expect(
-      still.getByRole("heading", { name: "Liquid 404" }),
-    ).toBeVisible();
+    await still.goto(page.url());
+    await expect(still.locator("svg path").first()).toBeVisible();
+    await expect(still.getByRole("link", { name: /DISCOVER/ })).toBeVisible();
   } finally {
     await context.close();
   }
 });
 
-test("a quick gesture sheds droplets, and navigation stays usable", async ({
+test("pushing transported liquid into another pool joins material", async ({
   page,
 }, info) => {
   await page.goto("404/004/");
-  const stage = page.getByRole("button", { name: /Liquid 404:/ });
-  const box = (await page.locator("button svg").boundingBox())!,
-    x = box.x + box.width * 0.27,
-    y = box.y + box.height * 0.48;
-  if (info.project.name === "mobile") {
-    const session = await page.context().newCDPSession(page);
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [{ x, y }],
-    });
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [{ x: x + 85, y: y - 50 }],
-    });
-    await expect
-      .poll(() =>
-        page
-          .locator("g[data-liquid-drops] circle")
-          .evaluateAll(
-            (nodes) =>
-              nodes.filter((n) => Number(n.getAttribute("r")) > 0).length,
-          ),
-      )
-      .toBeGreaterThan(0);
-    await page.screenshot({
-      path: `test-results/${info.project.name}-liquid-flick.png`,
-    });
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchCancel",
-      touchPoints: [],
-    });
-    await session.detach();
-  } else {
-    await page.mouse.move(x, y);
-    await page.mouse.down();
-    await page.mouse.move(x + 200, y - 100, { steps: 3 });
-    await expect
-      .poll(() =>
-        page
-          .locator("g[data-liquid-drops] circle")
-          .evaluateAll(
-            (nodes) =>
-              nodes.filter((n) => Number(n.getAttribute("r")) > 0).length,
-          ),
-      )
-      .toBeGreaterThan(0);
-    await page.screenshot({
-      path: `test-results/${info.project.name}-liquid-flick.png`,
-    });
-    await page.mouse.up();
+  const stage = page.getByRole("button", { name: /Liquid 404:/ }),
+    field = page.locator("[data-renderer]");
+  await expect(field).toBeVisible();
+  const box = (await field.boundingBox())!,
+    h = (box.height / box.width) * 1000,
+    x =
+      box.x +
+      (Number(await stage.getAttribute("data-first-x")) / 1000) * box.width,
+    y =
+      box.y +
+      (Number(await stage.getAttribute("data-first-y")) / h) * box.height;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 1; i <= 30; i++) {
+    await page.mouse.move(
+      x + ((box.width * 0.64 - (x - box.x)) * i) / 30,
+      y + ((box.height * 0.23 - (y - box.y)) * i) / 30,
+    );
+    await page.waitForTimeout(25);
   }
-  await expect(stage).toHaveAttribute("data-liquid-state", "settling");
-  await page.getByRole("link", { name: /DISCOVER/ }).click();
-  await expect(page.locator(".discover-footer")).toBeVisible();
+  await expect
+    .poll(async () => Number(await stage.getAttribute("data-merged")))
+    .toBeGreaterThan(0);
+  await page.screenshot({
+    path: `test-results/${info.project.name}-liquid-merged.png`,
+  });
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-liquid-state", "resting");
 });

@@ -62,8 +62,9 @@ export const artworks: readonly Artwork[] = [
     title: "Liquid 404",
     category: "Material",
     createdAt: "2026-10-18",
-    description: "Nothing holds its shape. Move closer. Pull gently. Let go.",
-    instructions: "Grab the ink / Pull, flick and let go / Arrow keys to stir",
+    description: "Nothing holds its shape. Pull apart. Bring together.",
+    instructions:
+      "Grab, stretch, split and merge / Enter grabs, arrows move, Enter releases",
     thumbnail: "/thumbnails/004.svg",
     theme: "light",
     component: Liquid404,

@@ -1,400 +1,292 @@
 "use client";
-
-import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createLiquid,
-  liquidPath,
-  pulseLiquid,
-  stepLiquid,
   grabLiquid,
-  flingLiquid,
-  type LiquidInput,
+  releaseLiquid,
+  stepLiquid,
+  liquidGroups,
 } from "@/lib/liquid404";
+import {
+  createWebGLLiquid,
+  createCanvasLiquid,
+  type LiquidRenderer,
+} from "@/lib/liquid-renderer";
 import styles from "./Liquid404.module.css";
-const STILL = liquidPath(createLiquid());
-type Drop = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  homeX: number;
-  homeY: number;
-  age: number;
-  size: number;
-};
 export default function Liquid404() {
-  const id = useId().replaceAll(":", "");
-  const svg = useRef<SVGSVGElement>(null),
-    surface = useRef<SVGPathElement>(null),
-    rim = useRef<SVGPathElement>(null),
-    clipping = useRef<SVGPathElement>(null),
-    shine = useRef<SVGRadialGradientElement>(null),
-    beads = useRef<SVGGElement>(null);
-  const input = useRef<LiquidInput>({
-    x: -1000,
-    y: -1000,
-    active: false,
-    dragging: false,
-    anchorX: 0,
-    anchorY: 0,
-  });
-  const previous = useRef({ x: 0, y: 0, time: 0, vx: 0, vy: 0 });
-  const wake = useRef<() => void>(() => {}),
-    pulse = useRef<(dx: number, dy: number) => void>(() => {}),
-    grab = useRef<(x: number, y: number) => void>(() => {}),
-    fling = useRef<(vx: number, vy: number) => void>(() => {}),
-    spray = useRef<(x: number, y: number, vx: number, vy: number) => void>(
-      () => {},
-    );
+  const stage = useRef<HTMLButtonElement>(null),
+    field = useRef<HTMLSpanElement>(null),
+    glCanvas = useRef<HTMLCanvasElement>(null),
+    fallbackCanvas = useRef<HTMLCanvasElement>(null);
   const [state, setState] = useState("resting");
   useEffect(() => {
-    const body = surface.current,
-      edge = rim.current,
-      clip = clipping.current,
-      light = shine.current,
-      dropletGroup = beads.current;
-    if (!body || !edge || !clip || !light || !dropletGroup) return;
-    const loops = createLiquid(),
+    const button = stage.current!,
+      area = field.current!,
+      gpu = glCanvas.current!,
+      cpu = fallbackCanvas.current!,
       motion = matchMedia("(prefers-reduced-motion: reduce)");
-    const circles = Array.from({ length: 16 }, () => {
-      const circle = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "circle",
-      );
-      circle.setAttribute("fill", `url(#${id}-body)`);
-      circle.setAttribute("r", "0");
-      dropletGroup.append(circle);
-      return circle;
-    });
-    let frame = 0,
+    let renderer: LiquidRenderer | null = createWebGLLiquid(gpu),
+      usingGL = !!renderer,
+      liquid = createLiquid(),
+      frame = 0,
       last = 0,
-      clock = 0,
-      tick = 0,
-      settling = false,
       alive = true,
-      lastDrop = 0;
-    let drops: Drop[] = [];
-    const request = () => {
+      pointer: number | null = null,
+      lastPaint = 0,
+      reported = "",
+      settled = false;
+    if (!renderer) renderer = createCanvasLiquid(cpu);
+    if (!renderer) return;
+    function display() {
+      gpu.style.visibility = usingGL ? "visible" : "hidden";
+      cpu.style.visibility = usingGL ? "hidden" : "visible";
+      area.dataset.renderer = usingGL ? "webgl" : "canvas";
+      area.dataset.enhanced = "true";
+    }
+    display();
+    function report() {
+      const next = liquid.holding
+        ? "touching"
+        : liquid.formed
+          ? "formed"
+          : liquid.idle < 6
+            ? "resting"
+            : "gathering";
+      if (next !== reported) {
+        reported = next;
+        setState(next);
+      }
+      button.dataset.groups = String(liquidGroups(liquid));
+      button.dataset.split = String(liquid.split);
+      button.dataset.merged = String(liquid.merged);
+      button.dataset.firstX = liquid.drops[0].x.toFixed(1);
+      button.dataset.firstY = liquid.drops[0].y.toFixed(1);
+    }
+    function wake() {
       if (alive && !frame && !document.hidden) {
         last = 0;
         frame = requestAnimationFrame(draw);
       }
-    };
+    }
+    function resize() {
+      const box = area.getBoundingClientRect(),
+        ratio = Math.min(devicePixelRatio || 1, 1.25),
+        scale = Math.min(ratio, 750 / box.width);
+      for (const canvas of [gpu, cpu]) {
+        canvas.width = Math.round(box.width * scale);
+        canvas.height = Math.round(box.height * scale);
+      }
+      const h = (box.height / box.width) * 1000;
+      if (Math.abs(liquid.height - h) > 2) {
+        liquid = createLiquid(h);
+        pointer = null;
+        reported = "";
+        settled = false;
+      }
+      report();
+      wake();
+    }
     function draw(now: number) {
       frame = 0;
-      if (!alive || document.hidden || !body!.isConnected) return;
-      const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
+      if (!alive || document.hidden) return;
+      const dt = last ? Math.min((now - last) / 1000, 0.25) : 1 / 60;
       last = now;
-      clock += dt;
-      const energy = stepLiquid(
-        loops,
-        input.current,
-        dt,
-        clock,
-        motion.matches,
-      );
-      if (++tick % 2 === 0 || motion.matches || input.current.dragging) {
-        const d = liquidPath(loops);
-        body!.setAttribute("d", d);
-        edge!.setAttribute("d", d);
-        clip!.setAttribute("d", d);
-        light!.setAttribute(
-          "cx",
-          String(input.current.active ? input.current.x : 350),
-        );
-        light!.setAttribute(
-          "cy",
-          String(input.current.active ? input.current.y : 120),
-        );
+      let energy = 0;
+      const steps = Math.max(1, Math.ceil(dt * 60));
+      for (let i = 0; i < steps; i++)
+        energy = stepLiquid(liquid, dt / steps, motion.matches);
+      if (now - lastPaint > (usingGL ? 30 : 65) || liquid.holding) {
+        renderer?.draw(liquid);
+        report();
+        lastPaint = now;
       }
-      drops = drops.filter((drop) => drop.age < 1.8 && !motion.matches);
-      for (let i = 0; i < circles.length; i++) {
-        const drop = drops[i],
-          circle = circles[i];
-        if (!drop) {
-          circle.setAttribute("r", "0");
-          continue;
-        }
-        drop.age += dt;
-        drop.vx += (drop.homeX - drop.x) * 8 * dt;
-        drop.vy += (drop.homeY - drop.y) * 8 * dt;
-        drop.vx *= Math.exp(-2.2 * dt);
-        drop.vy *= Math.exp(-2.2 * dt);
-        drop.x += drop.vx * dt;
-        drop.y += drop.vy * dt;
-        circle.setAttribute("cx", String(drop.x));
-        circle.setAttribute("cy", String(drop.y));
-        circle.setAttribute(
-          "r",
-          String(Math.max(0, drop.size * (1 - drop.age / 1.8))),
-        );
-      }
-      if (
-        !input.current.dragging &&
-        settling &&
-        energy < (motion.matches ? 1 : 6) &&
-        drops.length === 0
-      ) {
-        settling = false;
-        setState("resting");
-      }
-      if (!motion.matches || energy > 0.1 || drops.length)
-        frame = requestAnimationFrame(draw);
+      // Continue through the idle invitation and gather, then stop on a still 404.
+      settled = liquid.formed && energy < 0.02;
+      if (!settled || liquid.holding) frame = requestAnimationFrame(draw);
     }
-    wake.current = () => {
-      if (!input.current.dragging) settling = true;
-      request();
-    };
-    grab.current = (x, y) => {
-      grabLiquid(loops, x, y);
-    };
-    fling.current = (vx, vy) => {
-      flingLiquid(
-        loops,
-        vx * (motion.matches ? 0.2 : 1),
-        vy * (motion.matches ? 0.2 : 1),
-      );
-      settling = true;
-      request();
-    };
-    spray.current = (x, y, vx, vy) => {
+    function point(e: PointerEvent) {
+      const b = area.getBoundingClientRect();
+      return {
+        x: ((e.clientX - b.x) / b.width) * 1000,
+        y: ((e.clientY - b.y) / b.height) * liquid.height,
+      };
+    }
+    function down(e: PointerEvent) {
+      if (e.button !== 0 || pointer !== null) return;
+      const p = point(e);
+      if (!grabLiquid(liquid, p.x, p.y)) return;
+      pointer = e.pointerId;
+      button.setPointerCapture(e.pointerId);
+      reported = "";
+      report();
+      wake();
+    }
+    function move(e: PointerEvent) {
+      if (pointer !== e.pointerId) return;
+      const p = point(e);
+      liquid.pointer = {
+        x: Math.max(0, Math.min(1000, p.x)),
+        y: Math.max(0, Math.min(liquid.height, p.y)),
+      };
+      wake();
+    }
+    function end(e?: PointerEvent) {
+      if (e && pointer !== e.pointerId) return;
+      if (pointer === null && !liquid.holding) return;
+      releaseLiquid(liquid, e?.type !== "pointerup");
+      const id = pointer;
+      pointer = null;
+      if (id !== null && button.hasPointerCapture(id))
+        button.releasePointerCapture(id);
+      report();
+      wake();
+    }
+    function key(e: KeyboardEvent) {
       if (
-        motion.matches ||
-        Math.hypot(vx, vy) < 450 ||
-        performance.now() - lastDrop < 65
-      )
-        return;
-      lastDrop = performance.now();
-      if (drops.length >= 16) drops.shift();
-      drops.push({
-        x,
-        y,
-        vx: -vx * 0.16,
-        vy: -vy * 0.16,
-        homeX: input.current.anchorX,
-        homeY: input.current.anchorY,
-        age: 0,
-        size: 9 + Math.min(14, Math.hypot(vx, vy) / 100),
-      });
-    };
-    pulse.current = (dx, dy) => {
-      pulseLiquid(
-        loops,
-        510,
-        250,
-        dx * (motion.matches ? 0.3 : 1),
-        dy * (motion.matches ? 0.3 : 1),
-      );
-      settling = true;
-      setState("settling");
-      request();
-    };
-    const visibility = () => {
-      if (document.hidden) {
-        cancelAnimationFrame(frame);
-        frame = 0;
-        input.current.active = false;
-        input.current.dragging = false;
-        settling = true;
-      } else request();
-    };
+        [
+          "Enter",
+          " ",
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+          "Escape",
+        ].includes(e.key)
+      ) {
+        e.preventDefault();
+        if (e.key === "Escape") {
+          end();
+          return;
+        }
+        if (e.key === "Enter" || e.key === " ") {
+          if (liquid.holding) {
+            releaseLiquid(liquid);
+          } else {
+            const p = liquid.drops[0];
+            grabLiquid(liquid, p.x, p.y);
+          }
+        } else {
+          if (!liquid.holding) {
+            const p = liquid.drops[0];
+            grabLiquid(liquid, p.x, p.y);
+          }
+          liquid.pointer.x +=
+            e.key === "ArrowRight" ? 65 : e.key === "ArrowLeft" ? -65 : 0;
+          liquid.pointer.y +=
+            e.key === "ArrowDown" ? 65 : e.key === "ArrowUp" ? -65 : 0;
+        }
+        report();
+        wake();
+      }
+    }
+    function blur() {
+      end();
+    }
+    function visibility() {
+      blur();
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (!document.hidden) wake();
+    }
+    function lost(e: Event) {
+      e.preventDefault();
+      renderer?.dispose();
+      renderer = createCanvasLiquid(cpu);
+      usingGL = false;
+      display();
+      wake();
+    }
+    function restored() {
+      renderer?.dispose();
+      renderer = createWebGLLiquid(gpu);
+      usingGL = !!renderer;
+      if (!renderer) renderer = createCanvasLiquid(cpu);
+      display();
+      wake();
+    }
+    const observer = new ResizeObserver(resize);
+    observer.observe(area);
+    for (const [name, handler] of [
+      ["pointerdown", down],
+      ["pointermove", move],
+      ["pointerup", end],
+      ["pointercancel", end],
+      ["lostpointercapture", end],
+      ["blur", blur],
+      ["keydown", key],
+    ] as const)
+      button.addEventListener(name, handler as EventListener);
     document.addEventListener("visibilitychange", visibility);
-    motion.addEventListener("change", request);
-    request();
+    motion.addEventListener("change", wake);
+    gpu.addEventListener("webglcontextlost", lost);
+    gpu.addEventListener("webglcontextrestored", restored);
+    resize();
     return () => {
       alive = false;
       cancelAnimationFrame(frame);
+      observer.disconnect();
+      renderer?.dispose();
+      for (const [name, handler] of [
+        ["pointerdown", down],
+        ["pointermove", move],
+        ["pointerup", end],
+        ["pointercancel", end],
+        ["lostpointercapture", end],
+        ["blur", blur],
+        ["keydown", key],
+      ] as const)
+        button.removeEventListener(name, handler as EventListener);
       document.removeEventListener("visibilitychange", visibility);
-      motion.removeEventListener("change", request);
-      circles.forEach((circle) => circle.remove());
-      wake.current = () => {};
-      pulse.current = () => {};
-      grab.current = () => {};
-      fling.current = () => {};
-      spray.current = () => {};
+      motion.removeEventListener("change", wake);
+      gpu.removeEventListener("webglcontextlost", lost);
+      gpu.removeEventListener("webglcontextrestored", restored);
     };
-  }, [id]);
-  function position(event: PointerEvent<HTMLButtonElement>) {
-    const box = svg.current!.getBoundingClientRect();
-    return {
-      x: ((event.clientX - box.left) / box.width) * 1000,
-      y: ((event.clientY - box.top) / box.height) * 500,
-    };
-  }
-  function release() {
-    if (input.current.dragging) {
-      input.current.dragging = false;
-      input.current.active = false;
-      const speed =
-        performance.now() - previous.current.time < 100
-          ? previous.current
-          : { vx: 0, vy: 0 };
-      fling.current(speed.vx, speed.vy);
-      setState("settling");
-      wake.current();
-    }
-  }
+  }, []);
   return (
     <button
+      ref={stage}
       type="button"
       className={styles.stage}
       data-liquid-state={state}
-      aria-label="Liquid 404: grab and drag the ink. Pull far, flick, and release to let it flow back. Enter, Space or arrow keys send a wave."
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        const p = position(event);
-        if (
-          typeof surface.current?.isPointInFill !== "function" ||
-          typeof DOMPoint === "undefined" ||
-          !surface.current.isPointInFill(new DOMPoint(p.x, p.y))
-        )
-          return;
-        grab.current(p.x, p.y);
-        input.current = {
-          ...input.current,
-          ...p,
-          active: true,
-          dragging: true,
-          anchorX: p.x,
-          anchorY: p.y,
-        };
-        previous.current = { ...p, time: performance.now(), vx: 0, vy: 0 };
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setState("touching");
-        wake.current();
-      }}
-      onPointerMove={(event) => {
-        const p = position(event),
-          now = performance.now(),
-          last = previous.current,
-          dt = Math.max(0.008, (now - last.time) / 1000);
-        if (input.current.dragging) {
-          const vx = (p.x - last.x) / dt,
-            vy = (p.y - last.y) / dt;
-          previous.current = {
-            ...p,
-            time: now,
-            vx: last.vx * 0.35 + vx * 0.65,
-            vy: last.vy * 0.35 + vy * 0.65,
-          };
-          spray.current(p.x, p.y, vx, vy);
-        }
-        Object.assign(input.current, p, { active: true });
-        wake.current();
-      }}
-      onPointerUp={release}
-      onPointerCancel={() => {
-        previous.current.vx = previous.current.vy = 0;
-        release();
-      }}
-      onLostPointerCapture={release}
-      onPointerLeave={() => {
-        if (!input.current.dragging) {
-          input.current.active = false;
-          wake.current();
-        }
-      }}
-      onBlur={() => {
-        input.current.dragging = false;
-        input.current.active = false;
-        setState("settling");
-        wake.current();
-      }}
-      onClick={(event) => {
-        if (event.detail === 0) pulse.current(0, -1);
-      }}
-      onKeyDown={(event) => {
-        const directions: Record<string, [number, number]> = {
-          ArrowLeft: [-1, 0],
-          ArrowRight: [1, 0],
-          ArrowUp: [0, -1],
-          ArrowDown: [0, 1],
-        };
-        const d = directions[event.key];
-        if (d) {
-          event.preventDefault();
-          pulse.current(...d);
-        }
-      }}
+      aria-label="Liquid 404: grab a pool, pull to stretch and tear, push pools together to merge. Enter or Space grabs and releases; arrow keys move the liquid."
     >
-      <span className={styles.invitation} aria-hidden="true">
+      <span className={styles.invitation}>
         nothing
         <br />
-        <em>stays.</em>
+        <em>holds its shape.</em>
       </span>
-      <span className={styles.note} aria-hidden="true">
-        PULL IT OUT OF SHAPE.
-        <br />
-        IT KNOWS THE WAY BACK.
+      <span className={styles.note}>
+        004 / LIQUID
+        <br />A SMALL POOL OF POSSIBILITIES.
       </span>
-      <svg
-        ref={svg}
-        className={styles.field}
-        viewBox="0 0 1000 500"
-        aria-hidden="true"
-      >
-        <defs>
-          <radialGradient id={`${id}-body`} cx=".25" cy=".15" r=".95">
-            <stop stopColor="#7b9fff" />
-            <stop offset=".35" stopColor="#4057f2" />
-            <stop offset="1" stopColor="#1723b8" />
-          </radialGradient>
-          <radialGradient
-            ref={shine}
-            id={`${id}-light`}
-            gradientUnits="userSpaceOnUse"
-            cx="350"
-            cy="120"
-            r="230"
-          >
-            <stop stopColor="#cfddff" stopOpacity=".45" />
-            <stop offset="1" stopColor="#7791ff" stopOpacity="0" />
-          </radialGradient>
-          <clipPath id={`${id}-clip`}>
-            <path ref={clipping} d={STILL} clipRule="nonzero" />
-          </clipPath>
-          <filter
-            id={`${id}-shadow`}
-            x="-30%"
-            y="-40%"
-            width="180%"
-            height="200%"
-          >
-            <feDropShadow
-              dx="0"
-              dy="18"
-              stdDeviation="12"
-              floodColor="#3233b0"
-              floodOpacity=".15"
-            />
-          </filter>
-        </defs>
-        <path
-          ref={surface}
-          d={STILL}
-          fill={`url(#${id}-body)`}
-          fillRule="nonzero"
-          filter={`url(#${id}-shadow)`}
+      <span ref={field} className={styles.field}>
+        <svg
+          className={styles.still}
+          viewBox="0 0 1000 700"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            fill="#263db8"
+            d="M170 210C120 130 260 90 310 160C370 240 300 330 230 300C195 290 200 240 170 210ZM560 110C630 60 730 130 690 200C650 270 540 230 540 180C540 150 540 130 560 110ZM710 430C700 360 830 340 860 420C900 530 750 560 710 490ZM300 470C280 400 420 370 460 430C510 520 360 580 320 530Z"
+          />
+        </svg>
+        <canvas ref={glCanvas} className={styles.canvas} aria-hidden="true" />
+        <canvas
+          ref={fallbackCanvas}
+          className={styles.canvas}
+          aria-hidden="true"
         />
-        <path
-          ref={rim}
-          d={STILL}
-          fill="none"
-          stroke="#bdceff"
-          strokeWidth="1"
-          strokeOpacity=".22"
-        />
-        <g clipPath={`url(#${id}-clip)`}>
-          <path d="M0 0H1000V500H0Z" fill={`url(#${id}-light)`} />
-        </g>
-        <g ref={beads} data-liquid-drops />
-      </svg>
+        <span className={styles.poolLabel}>NO FIXED FORM / 404</span>
+      </span>
       <span className={styles.caption} role="status" aria-live="polite">
         {state === "touching"
-          ? "a little further."
-          : state === "settling"
-            ? "let it find itself."
-            : "go on. get your hands messy."}
+          ? "take a little with you."
+          : state === "formed"
+            ? "a shape, for now."
+            : state === "gathering"
+              ? "even nothing finds a shape."
+              : "pull apart. bring together."}
       </span>
     </button>
   );

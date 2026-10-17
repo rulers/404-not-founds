@@ -35,3 +35,5 @@ Path2Dによる描画とヒットテストの共有は、図形エディタ・�
 単体テストは亀裂の起点と変化、形状内の破片、重力・回転減衰を確認。ブラウザテストはPC／モバイルの打撃・空洞・粉砕・再生・キーボード・Discover・静的URL・Canvasなし・reduced-motion・320px幅と横向きを対象にする。結果はPRと日報に記録する。
 
 真の光学屈折・破片同士の衝突はシミュレートしない。Canvas非対応時は鑑賞専用。実機Safari／Android、Lighthouse数値は未確認。PRは未マージで、本番サイトには公開しない。
+
+確認結果：Prettier・lint・typecheck・単体テスト14件・basePath付きstatic build成功。[実装コミットのPR CI](https://github.com/rulers/404-not-founds/actions/runs/39044529715)でもブラウザ29件が成功（desktop対象外のモバイル専用7ケースは除く）。

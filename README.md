@@ -7,6 +7,10 @@ Day 002「Break the 404」はCanvas 2Dのブロック崩し。マウス・チル
 
 Day 001はCSSのRGB分離、スキャンライン、ノイズ、水平スライスで構成し、Three.js・DB・API・外部フォントは使用していません。
 
+## #00 共通開発・運用
+
+[詳細手順](doc/development.md)に、featureブランチ・Pull Request・作品別技術資料・devlogのCloud／Local運用を集約しています。通常の作業完了地点はPR作成とCI結果確認です。mainへの直接コミット・pushと、承認のないマージ・本番公開は行いません。日報は生成と投稿を分け、Cloudで投稿環境がなければMarkdownを保存します。
+
 ## 起動
 
 Node.js 24、npmを使用します。
@@ -66,9 +70,10 @@ public/thumbnails/002.svg
 
 ## 次の作品（Day 003）を追加する
 
-1. `components/artworks/YourArtwork.tsx` を追加します。操作やフックを使う場合は先頭に `"use client";` を付け、デフォルトexportで引数なしの作品コンポーネントを公開します。背景と表示範囲はコンポーネント側で制御し、タイマー等の解除とreduced-motionにも対応してください。
-2. `public/thumbnails/003.svg`（PNG等も可）を追加します。推奨比率は3:2。
-3. `lib/artworks.ts` にimportし、配列末尾に登録します。
+1. mainの最新状態と未コミット変更を確認し、`feature/404-003-your-artwork` のようなfeatureブランチを作成します。mainへの直接コミット・pushは行いません。
+2. `components/artworks/YourArtwork.tsx` を追加します。操作やフックを使う場合は先頭に `"use client";` を付け、デフォルトexportで引数なしの作品コンポーネントを公開します。背景と表示範囲はコンポーネント側で制御し、タイマー等の解除とreduced-motionにも対応してください。
+3. `public/thumbnails/003.svg`（PNG等も可）を追加します。推奨比率は3:2。
+4. `lib/artworks.ts` にimportし、配列末尾に登録します。
 
 ```tsx
 import YourArtwork from "@/components/artworks/YourArtwork";
@@ -87,13 +92,13 @@ import YourArtwork from "@/components/artworks/YourArtwork";
 },
 ```
 
-4. テスト・ビルドし公開します。Discover、作品数、ランダム展示、Shuffle、`/404/003/` の静的生成に自動反映されます。`createdAt` はメタデータであり予約公開機能ではありません。登録した作品はすべて公開対象です。IDは一意の3桁文字列にしてください。
+5. `doc/day-003-your-artwork.md` に技術資料を作成して目次に追加し、テスト・ビルド後にfeatureブランチからPRを作成します。CIを確認して人間のレビューを待ち、明示的な承認後にマージ・公開します。Discover、作品数、ランダム展示、Shuffle、`/404/003/` の静的生成に自動反映されます。`createdAt` はメタデータであり予約公開機能ではありません。登録した作品はすべて公開対象です。IDは一意の3桁文字列にしてください。
 
 現状は小規模な明示的importです。作品が重くなった際にコンポーネントを個別に遅延ロードできます。カテゴリーは登録済みで、将来一覧のフィルターに利用できます。
 
 ## GitHub Pages
 
-GitHubの **Settings → Pages → Build and deployment → Source: GitHub Actions** を選択してください。`main` へのpush、またはActionsの手動実行でビルド・デプロイします。別ブランチを公開元にする場合はworkflowのbranchesを変更します。
+GitHubの **Settings → Pages → Build and deployment → Source: GitHub Actions** を選択してください。承認済みPRのマージによる `main` の更新でビルド・デプロイします（mainへの直接pushは禁止）。手動実行も公開につながるため、人間の明示的な承認が必要です。PRでは公開しない専用CIを実行します。別ブランチを公開元にする場合はworkflowのbranchesを変更します。
 
 Actionsでは `GITHUB_REPOSITORY` からリポジトリ名を取得して `basePath` を設定します。このリポジトリでは `/404-not-founds`。`owner.github.io` の形式では空になります。独自ドメイン等で変更する場合は、ビルド環境変数 `NEXT_PUBLIC_BASE_PATH` を明示してください（ルートは空文字、配下は `/repo`、末尾スラッシュなし）。Next Linkと静的サムネイルの両方がこの設定に従います。
 
@@ -131,8 +136,8 @@ http://localhost:3000/404-not-founds/ を開きます。テストサーバーは
 ## 開発ドキュメント
 
 - [doc/README.md](doc/README.md): ページ・作品・技術の記録の目次
-- [AGENTS.md](AGENTS.md): エージェントが自動検出する開発ルール。設計・品質・mainへのpush方針を集約
-- [Skill.md](Skill.md): 作品追加・共通ベース変更・検証・公開の手順
+- [AGENTS.md](AGENTS.md): エージェントが自動検出する開発ルール。設計・品質・featureブランチ／PR・devlogの必須方針を集約
+- [Skill.md](Skill.md): 作品追加・共通ベース変更・検証・PR作成・日報の手順
 
 CIは整形チェック・lint・単体テスト・型チェック・ビルド・ブラウザテストを通過してからデプロイします。
 

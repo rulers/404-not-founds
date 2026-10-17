@@ -35,5 +35,5 @@ Next.js App Router・TypeScript・CSSを使い、GitHub Pagesで公開してい�
 - [作品と技術資料の目次](doc/README.md)
 - [設計・技術構成](doc/architecture.md)
 - [作品を追加する手順](Skill.md)
-- [#00 共通開発・運用](doc/development.md)：ブランチ・PR・検証・公開・devlog
+- [#00 共通開発・運用](doc/development.md)：Git Flow・PR・検証・公開・devlog
 - [開発時の必須ルール](AGENTS.md)

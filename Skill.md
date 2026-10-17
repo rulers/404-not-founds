@@ -6,7 +6,7 @@
 
 1. `AGENTS.md` → 関連する `doc/` の文書を読む。
 2. `git status --short`、`git diff`、`git branch --show-current`、`git remote -v` を確認する。
-3. [#00のブランチ運用](doc/development.md#ブランチ運用)に従い、remoteのmainを確認してfeatureブランチで作業する。未コミット変更がある場合は無断で破棄・上書き・退避しない。
+3. [#00のブランチ運用](doc/development.md#ブランチ運用)に従い、remoteのmain／developを確認し、developからfeatureブランチを作って作業する。未コミット変更がある場合は無断で破棄・上書き・退避しない。
 4. READMEの起動方法と `package.json` を確認し、依存が未導入なら `npm ci` を実行する。
 5. 既存のコンポーネント・CSS変数・レジストリを使える範囲を確認してから編集する。
 
@@ -70,12 +70,12 @@ NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
 
 ## Pull Request・報告
 
-1. `git diff --check` と変更一覧を確認し、featureブランチで今回の対象だけをステージしてコミットする。mainへ直接コミット・pushしない。
-2. remoteのmainと作業ブランチを確認する。更新の取り込み・競合解消では既存変更を保全し、無断の退避やforce pushをしない。
-3. featureブランチへpushし、[PRテンプレート](.github/PULL_REQUEST_TEMPLATE.md)に従ってmain向けのPull Requestを作成する。作品PRタイトルは `feat(404): Day XXX - 作品名`。#00の運用変更は変更内容が分かるタイトルにする。
+1. `git diff --check` と変更一覧を確認し、featureブランチで今回の対象だけをステージしてコミットする。main／developへ直接コミット・pushしない。
+2. remoteのdevelopと作業ブランチを確認する。更新の取り込み・競合解消では既存変更を保全し、無断の退避やforce pushをしない。
+3. featureブランチへpushし、[PRテンプレート](.github/PULL_REQUEST_TEMPLATE.md)に従ってdevelop向けのPull Requestを作成する。作品PRタイトルは `feat(404): Day XXX - 作品名`。#00の運用変更は変更内容が分かるタイトルにする。
 4. PRのCI結果を確認する。失敗時は原因を調査・修正し、確認できない場合は理由を報告する。
 5. 変更内容・検証結果・PR URL・未確認事項を報告してレビューを待つ。PR作成とマージを分離し、人間の明示的な承認なしにマージ・自動マージ設定・本番公開をしない。
-6. 承認後のマージ・公開を担当する場合は、mainの対象コミットのCIとデプロイを確認する。
+6. 公開作業は [Git Flowのrelease／hotfix手順](doc/development.md#ブランチ運用)に従う。featureをmainへ直接マージしない。承認されたrelease／hotfixのmain反映・タグ・developへの戻し込みを行い、mainの対象コミットのCIとデプロイを確認する。
 
 ## 日報
 

@@ -52,6 +52,7 @@ test("Day 002 direct URL, mouse/keyboard, thumbnail and navigation", async ({
   await page.keyboard.press("Space");
   await expect(stage).toHaveAttribute("data-phase", "playing");
   await page.keyboard.down("ArrowLeft");
+  await expect.poll(() => paddlePosition(page)).toBeLessThan(0.2);
   await page.keyboard.up("ArrowLeft");
   expect(
     await page.evaluate(
@@ -84,6 +85,7 @@ for (const permission of ["granted", "denied"] as const) {
     await page.goto("404/002/");
     const stage = page.locator("[data-phase]");
     const game = page.getByRole("button", { name: /Break the 404 game/ });
+    await page.getByRole("button", { name: "ENABLE TILT" }).tap();
     await game.tap();
     await expect(stage).toHaveAttribute("data-phase", "playing");
     if (permission === "granted") {
@@ -91,7 +93,15 @@ for (const permission of ["granted", "denied"] as const) {
       await page.evaluate(() =>
         window.dispatchEvent(
           new DeviceOrientationEvent("deviceorientation", {
-            gamma: 20,
+            gamma: 10,
+            beta: 0,
+          }),
+        ),
+      );
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new DeviceOrientationEvent("deviceorientation", {
+            gamma: 35,
             beta: 0,
           }),
         ),
@@ -125,6 +135,7 @@ test("motion granted without sensor readings falls back to drag", async ({
     }),
   );
   await page.goto("404/002/");
+  await page.getByRole("button", { name: "ENABLE TILT" }).tap();
   await page.getByRole("button", { name: /Break the 404 game/ }).tap();
   await expect(page.locator("[data-phase]")).toHaveAttribute(
     "data-control",
@@ -159,3 +170,89 @@ test("Day 002 remains available with reduced motion and narrow landscape layout"
     );
   }
 });
+
+test("tilt calibration, dead zone, rotation, sensor loss and re-enable", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "mobile", "Touch device only");
+  await page.goto("404/002/");
+  const stage = page.locator("[data-phase]");
+  const send = async (gamma: number | null, beta = 0) => {
+    await page.evaluate(
+      ({ gamma, beta }) =>
+        window.dispatchEvent(
+          new DeviceOrientationEvent("deviceorientation", { gamma, beta }),
+        ),
+      { gamma, beta },
+    );
+  };
+  await page.getByRole("button", { name: "ENABLE TILT" }).tap();
+  await send(15);
+  await send(16);
+  await expect.poll(() => paddlePosition(page)).toBeGreaterThan(0.47);
+  await expect.poll(() => paddlePosition(page)).toBeLessThan(0.53);
+  await send(40);
+  await expect.poll(() => paddlePosition(page)).toBeGreaterThan(0.8);
+  await page.getByRole("button", { name: "CALIBRATE" }).tap();
+  await send(40);
+  await expect.poll(() => paddlePosition(page)).toBeLessThan(0.53);
+  await page.evaluate(() =>
+    Object.defineProperty(screen.orientation, "angle", {
+      value: 90,
+      configurable: true,
+    }),
+  );
+  await send(null, 30);
+  await send(null, 55);
+  await expect.poll(() => paddlePosition(page)).toBeLessThan(0.2);
+  await expect(stage).toHaveAttribute("data-control", "touch");
+  await page.getByRole("button", { name: "ENABLE TILT" }).tap();
+  await send(null, 30);
+  await expect(stage).toHaveAttribute("data-control", "tilt");
+  await page.getByRole("button", { name: /Break the 404 game/ }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(stage).toHaveAttribute("data-control", "pointer");
+});
+
+for (const failure of ["unsupported", "throws", "pending"] as const) {
+  test(`sensor ${failure} leaves launch and manual controls available`, async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== "mobile", "Touch device only");
+    await page.addInitScript((failure) => {
+      if (failure === "unsupported")
+        Object.defineProperty(window, "DeviceOrientationEvent", {
+          value: undefined,
+          configurable: true,
+        });
+      else
+        Object.defineProperty(DeviceOrientationEvent, "requestPermission", {
+          value: () =>
+            failure === "throws"
+              ? Promise.reject(new Error("unavailable"))
+              : new Promise(() => {}),
+          configurable: true,
+        });
+    }, failure);
+    await page.goto("404/002/");
+    await page.getByRole("button", { name: "ENABLE TILT" }).tap();
+    const game = page.getByRole("button", { name: /Break the 404 game/ });
+    await game.tap();
+    await expect(page.locator("[data-phase]")).toHaveAttribute(
+      "data-phase",
+      "playing",
+    );
+    await game.dispatchEvent("pointermove", {
+      pointerType: "touch",
+      clientX: 90,
+      clientY: 400,
+    });
+    await expect(page.locator("[data-phase]")).toHaveAttribute(
+      "data-control",
+      "touch",
+    );
+    await expect(
+      page.getByRole("button", { name: "ENABLE TILT" }),
+    ).toBeEnabled();
+  });
+}

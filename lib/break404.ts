@@ -37,6 +37,8 @@ export type Brick = {
 };
 export type Game = {
   height: number;
+  particles: { x: number; y: number; vx: number; vy: number; life: number }[];
+  glitch: number;
   bricks: Brick[];
   remaining: number;
   phase: "ready" | "playing" | "won";
@@ -78,6 +80,8 @@ export function createGame(height: number): Game {
   const bricks = createBricks(height);
   const game: Game = {
     height,
+    particles: [],
+    glitch: 0,
     bricks,
     remaining: bricks.length,
     phase: "ready",
@@ -105,14 +109,25 @@ export function aimPaddle(game: Game, x: number) {
 
 export function launchBall(game: Game) {
   if (game.phase !== "ready") return;
-  const speed = Math.min(1100, Math.max(580, game.height * 0.8));
+  const speed = Math.min(1800, Math.max(580, game.height * 1.1));
   game.phase = "playing";
   game.ball.vx = speed * 0.32;
   game.ball.vy = -speed * Math.sqrt(1 - 0.32 ** 2);
 }
 
-export function advanceGame(game: Game, elapsed: number) {
+export function advanceGame(
+  game: Game,
+  elapsed: number,
+  reducedMotion = false,
+) {
   const dt = Math.max(0, Math.min(elapsed, 1 / 30));
+  game.glitch = Math.max(0, game.glitch - dt);
+  game.particles = game.particles.filter((p) => {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= dt;
+    return p.life > 0;
+  });
   game.paddle.x +=
     (game.paddle.target - game.paddle.x) * (1 - Math.exp(-22 * dt));
   if (game.phase === "ready") {
@@ -175,8 +190,31 @@ export function advanceGame(game: Game, elapsed: number) {
         ball.radius ** 2
       )
         continue;
-      brick.alive = false;
-      game.remaining--;
+      // A small blast clears neighboring pixels, keeping the dense numeral playable.
+      for (const hit of game.bricks) {
+        if (
+          !hit.alive ||
+          Math.hypot(hit.x - brick.x, hit.y - brick.y) >
+            Math.min(65, game.height * 0.125)
+        )
+          continue;
+        hit.alive = false;
+        game.remaining--;
+        if (!reducedMotion) {
+          game.glitch = 0.07;
+          for (let n = 0; n < 3; n++) {
+            const angle = Math.random() * Math.PI * 2;
+            game.particles.push({
+              x: hit.x + hit.width / 2,
+              y: hit.y + hit.height / 2,
+              vx: Math.cos(angle) * 100,
+              vy: Math.sin(angle) * 100,
+              life: 0.28,
+            });
+          }
+          game.particles = game.particles.slice(-180);
+        }
+      }
       if (
         previousY + ball.radius <= brick.y ||
         previousY - ball.radius >= brick.y + brick.height

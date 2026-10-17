@@ -188,3 +188,30 @@
     animation: none;
   }
 }
+
+.controls {
+  position: absolute;
+  z-index: 2;
+  right: max(var(--gallery-edge, 22px), env(safe-area-inset-right));
+  bottom: max(65px, calc(env(safe-area-inset-bottom) + 42px));
+}
+.controls button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--acid);
+  font:
+    9px "Courier New",
+    monospace;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.controls button:disabled {
+  opacity: 0.5;
+}
+@media (max-height: 500px) and (min-width: 601px) {
+  .controls {
+    bottom: 38px;
+  }
+}

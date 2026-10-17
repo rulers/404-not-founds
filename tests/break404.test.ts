@@ -81,3 +81,22 @@ test("entire board can be cleared through actual collision updates", () => {
   assert.equal(game.remaining, 0);
   assert.equal(game.phase, "won");
 });
+
+test("nearby pixels break together, distant pixels survive, reduced motion stays quiet", () => {
+  for (const reduced of [false, true]) {
+    const game = createGame(800);
+    game.bricks = [
+      { x: 480, y: 300, width: 22, height: 4, alive: true },
+      { x: 505, y: 300, width: 22, height: 4, alive: true },
+      { x: 800, y: 300, width: 22, height: 4, alive: true },
+    ];
+    game.remaining = 3;
+    launchBall(game);
+    Object.assign(game.ball, { x: 490, y: 340, vx: 0, vy: -4000 });
+    advanceGame(game, 1 / 30, reduced);
+    assert.equal(game.remaining, 1);
+    assert.equal(game.bricks[2].alive, true);
+    assert.equal(game.particles.length > 0, !reduced);
+    assert.equal(game.glitch > 0, !reduced);
+  }
+});

@@ -10,6 +10,7 @@ import {
   parkBall,
   type Game,
 } from "@/lib/break404";
+import { tiltAngle, tiltTarget, TILT_TIMEOUT } from "@/lib/break404Tilt";
 import styles from "./Break404.module.css";
 
 type Control = "pointer" | "tilt" | "touch";
@@ -27,8 +28,19 @@ function draw(
   ctx.save();
   ctx.scale(width / BOARD_WIDTH, height / game.height);
   ctx.fillStyle = "#efefec";
+  for (const particle of game.particles) {
+    ctx.globalAlpha = particle.life / 0.28;
+    ctx.fillRect(particle.x, particle.y, 3, 3);
+  }
+  ctx.globalAlpha = 1;
   for (const brick of game.bricks) {
-    if (brick.alive) ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+    if (brick.alive)
+      ctx.fillRect(
+        brick.x + (game.glitch > 0 ? Math.sin(brick.y * 4) * 2 : 0),
+        brick.y,
+        brick.width,
+        brick.height,
+      );
   }
   const { ball, paddle } = game;
   ctx.fillStyle = "#d5ff70";
@@ -53,8 +65,11 @@ export default function Break404() {
   const game = useRef<Game | null>(null);
   const mounted = useRef(false);
   const control = useRef<Control>("pointer");
-  const permissionAttempted = useRef(false);
-  const receivedTilt = useRef(false);
+  const baseline = useRef<number | null>(null);
+  const latestAngle = useRef<number | null>(null);
+  const rotation = useRef<number | null>(null);
+  const lastTilt = useRef(0);
+  const requestId = useRef(0);
   const tiltTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const keys = useRef({ left: false, right: false });
   const [phase, setPhase] = useState<Game["phase"]>("ready");
@@ -67,6 +82,7 @@ export default function Break404() {
     const ctx = element?.getContext("2d");
     if (!element || !ctx) return;
     mounted.current = true;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
     let last = 0;
     let priorPhase: Game["phase"] = "ready";
@@ -89,19 +105,14 @@ export default function Break404() {
         screen.orientation?.angle ??
         (window as Window & { orientation?: number }).orientation ??
         0;
-      const value =
-        angle === 90
-          ? -(event.beta ?? 0)
-          : angle === 270 || angle === -90
-            ? (event.beta ?? 0)
-            : (event.gamma ?? 0) * (angle === 180 ? -1 : 1);
-      if (event.gamma === null || !Number.isFinite(value)) return;
-      receivedTilt.current = true;
-      aimPaddle(
-        game.current,
-        BOARD_WIDTH / 2 +
-          ((Math.max(-30, Math.min(30, value)) / 30) * BOARD_WIDTH) / 2,
-      );
+      const value = tiltAngle(event.beta, event.gamma, angle);
+      if (value === null) return;
+      if (rotation.current !== angle) baseline.current = null;
+      rotation.current = angle;
+      latestAngle.current = value;
+      lastTilt.current = performance.now();
+      baseline.current ??= value;
+      aimPaddle(game.current, tiltTarget(value, baseline.current));
     };
     const visibility = () => {
       keys.current = { left: false, right: false };
@@ -122,7 +133,12 @@ export default function Break404() {
                 950,
           );
         }
-        advanceGame(current, dt);
+        if (
+          control.current === "tilt" &&
+          performance.now() - lastTilt.current > TILT_TIMEOUT
+        )
+          setControl("touch");
+        advanceGame(current, dt, motion.matches);
         if (current.phase !== priorPhase) {
           priorPhase = current.phase;
           setPhase(current.phase);
@@ -150,46 +166,63 @@ export default function Break404() {
   }, []);
 
   function setControl(value: Control) {
+    if (value !== "tilt") {
+      requestId.current++;
+      if (tiltTimeout.current) clearTimeout(tiltTimeout.current);
+      setRequesting(false);
+    }
     control.current = value;
     setInput(value);
   }
 
-  async function activate() {
-    if (!game.current || requesting) return;
+  function activate() {
+    if (!game.current) return;
     if (game.current.phase === "won") {
       game.current = createGame(game.current.height);
       setRemaining(game.current.remaining);
     }
     if (game.current.phase !== "ready") return;
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
-    if (coarse && !permissionAttempted.current) {
-      permissionAttempted.current = true;
-      if (typeof DeviceOrientationEvent !== "undefined") {
-        try {
-          setRequesting(true);
-          const sensor = DeviceOrientationEvent as PermissionEvent;
-          // iOSの権限要求はタップのハンドラーから直接呼ぶ。
-          const permission = sensor.requestPermission
-            ? await sensor.requestPermission()
-            : "granted";
-          if (!mounted.current) return;
-          if (permission === "granted") {
-            setControl("tilt");
-            receivedTilt.current = false;
-            tiltTimeout.current = setTimeout(() => {
-              if (mounted.current && !receivedTilt.current) setControl("touch");
-            }, 1500);
-          } else setControl("touch");
-        } catch {
-          if (mounted.current) setControl("touch");
-        } finally {
-          if (mounted.current) setRequesting(false);
-        }
-      } else setControl("touch");
-    }
     if (!mounted.current || !game.current) return;
     launchBall(game.current);
     setPhase(game.current.phase);
+  }
+
+  async function enableTilt() {
+    if (requesting) return;
+    const id = ++requestId.current;
+    if (typeof DeviceOrientationEvent === "undefined") {
+      setControl("touch");
+      return;
+    }
+    setRequesting(true);
+    // A hung permission dialog must not prevent the game from launching.
+    tiltTimeout.current = setTimeout(() => {
+      if (mounted.current && id === requestId.current) {
+        requestId.current++;
+        setRequesting(false);
+        setControl("touch");
+      }
+    }, 10000);
+    try {
+      const sensor = DeviceOrientationEvent as PermissionEvent;
+      const permission = sensor.requestPermission
+        ? await sensor.requestPermission()
+        : "granted";
+      if (!mounted.current || id !== requestId.current) return;
+      if (permission === "granted") {
+        baseline.current = null;
+        latestAngle.current = null;
+        lastTilt.current = performance.now();
+        setControl("tilt");
+      } else setControl("touch");
+    } catch {
+      if (mounted.current && id === requestId.current) setControl("touch");
+    } finally {
+      if (mounted.current && id === requestId.current) {
+        if (tiltTimeout.current) clearTimeout(tiltTimeout.current);
+        setRequesting(false);
+      }
+    }
   }
 
   function point(event: PointerEvent<HTMLButtonElement>) {
@@ -200,6 +233,8 @@ export default function Break404() {
       control.current !== "touch"
     )
       setControl("touch");
+    if (event.pointerType === "touch" && event.type === "pointerdown")
+      event.currentTarget.setPointerCapture(event.pointerId);
     if (control.current === "tilt") return;
     const bounds = canvas.current.getBoundingClientRect();
     aimPaddle(
@@ -219,6 +254,7 @@ export default function Break404() {
         onKeyDown={(event) => {
           if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
             event.preventDefault();
+            setControl("pointer");
             keys.current[event.key === "ArrowLeft" ? "left" : "right"] = true;
           }
         }}
@@ -242,15 +278,30 @@ export default function Break404() {
           ) : phase === "ready" ? (
             <>
               <span>
-                {requesting
-                  ? "WAITING FOR MOTION PERMISSION"
-                  : "TAP / CLICK TO LAUNCH"}
+                {requesting ? "WAITING FOR MOTION PERMISSION" : "TAP TO LAUNCH"}
               </span>
               <small>BREAK THE SIGNAL. FIND THE VOID.</small>
             </>
           ) : null}
         </span>
       </button>
+      <div className={styles.controls}>
+        {input === "tilt" ? (
+          <button
+            type="button"
+            onClick={() => {
+              baseline.current = latestAngle.current;
+              if (game.current) aimPaddle(game.current, 500);
+            }}
+          >
+            CALIBRATE
+          </button>
+        ) : (
+          <button type="button" disabled={requesting} onClick={enableTilt}>
+            {requesting ? "ENABLING TILT…" : "ENABLE TILT"}
+          </button>
+        )}
+      </div>
       <div className={styles.identity}>
         <span>DAY 002 /</span>
         <h1>BREAK THE 404</h1>

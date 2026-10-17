@@ -13,7 +13,7 @@ import {
 import { tiltAngle, tiltTarget, TILT_TIMEOUT } from "@/lib/break404Tilt";
 import styles from "./Break404.module.css";
 
-type Control = "pointer" | "tilt" | "touch";
+type Control = "pointer" | "tilt-pending" | "tilt" | "touch";
 type PermissionEvent = typeof DeviceOrientationEvent & {
   requestPermission?: () => Promise<"granted" | "denied">;
 };
@@ -65,6 +65,9 @@ export default function Break404() {
   const game = useRef<Game | null>(null);
   const mounted = useRef(false);
   const control = useRef<Control>("pointer");
+  const enableOnTap = useRef(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const dragged = useRef(false);
   const baseline = useRef<number | null>(null);
   const latestAngle = useRef<number | null>(null);
   const rotation = useRef<number | null>(null);
@@ -83,6 +86,11 @@ export default function Break404() {
     if (!element || !ctx) return;
     mounted.current = true;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobile =
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+      window.matchMedia("(pointer: coarse)").matches;
+    let initializeInput = true;
     let frame = 0;
     let last = 0;
     let priorPhase: Game["phase"] = "ready";
@@ -100,13 +108,21 @@ export default function Break404() {
     observer.observe(element);
     resize();
     const orientation = (event: DeviceOrientationEvent) => {
-      if (control.current !== "tilt" || !game.current) return;
+      if (
+        (control.current !== "tilt" && control.current !== "tilt-pending") ||
+        !game.current
+      )
+        return;
       const angle =
         screen.orientation?.angle ??
         (window as Window & { orientation?: number }).orientation ??
         0;
       const value = tiltAngle(event.beta, event.gamma, angle);
       if (value === null) return;
+      if (control.current === "tilt-pending") {
+        enableOnTap.current = false;
+        setControl("tilt");
+      }
       if (rotation.current !== angle) baseline.current = null;
       rotation.current = angle;
       latestAngle.current = value;
@@ -121,6 +137,20 @@ export default function Break404() {
       last = 0;
     };
     const tick = (time: number) => {
+      if (initializeInput) {
+        initializeInput = false;
+        if (mobile) {
+          if (typeof DeviceOrientationEvent === "undefined")
+            setControl("touch");
+          else {
+            enableOnTap.current = Boolean(
+              (DeviceOrientationEvent as PermissionEvent).requestPermission,
+            );
+            lastTilt.current = performance.now();
+            setControl(enableOnTap.current ? "tilt-pending" : "tilt");
+          }
+        }
+      }
       const current = game.current;
       if (current && !document.hidden) {
         const dt = last ? (time - last) / 1000 : 0;
@@ -166,7 +196,8 @@ export default function Break404() {
   }, []);
 
   function setControl(value: Control) {
-    if (value !== "tilt") {
+    if (value !== "tilt" && value !== "tilt-pending") {
+      enableOnTap.current = false;
       requestId.current++;
       if (tiltTimeout.current) clearTimeout(tiltTimeout.current);
       setRequesting(false);
@@ -176,6 +207,12 @@ export default function Break404() {
   }
 
   function activate() {
+    if (dragged.current) {
+      dragged.current = false;
+      return;
+    }
+    // Keep the permission call in the user's tap stack (required by iOS).
+    if (enableOnTap.current) void enableTilt();
     if (!game.current) return;
     if (game.current.phase === "won") {
       game.current = createGame(game.current.height);
@@ -189,6 +226,7 @@ export default function Break404() {
 
   async function enableTilt() {
     if (requesting) return;
+    enableOnTap.current = false;
     const id = ++requestId.current;
     if (typeof DeviceOrientationEvent === "undefined") {
       setControl("touch");
@@ -227,15 +265,24 @@ export default function Break404() {
 
   function point(event: PointerEvent<HTMLButtonElement>) {
     if (!game.current || !canvas.current) return;
-    if (
-      event.pointerType === "touch" &&
-      event.type === "pointermove" &&
-      control.current !== "touch"
-    )
-      setControl("touch");
-    if (event.pointerType === "touch" && event.type === "pointerdown")
-      event.currentTarget.setPointerCapture(event.pointerId);
-    if (control.current === "tilt") return;
+    if (event.pointerType === "touch") {
+      if (event.type === "pointerdown") {
+        touchStart.current = { x: event.clientX, y: event.clientY };
+        dragged.current = false;
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } else if (event.type === "pointermove") {
+        const start = touchStart.current;
+        if (
+          !start ||
+          Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10
+        ) {
+          dragged.current = true;
+          if (control.current !== "touch") setControl("touch");
+        } else if (control.current !== "touch") return;
+      }
+    }
+    if (control.current === "tilt" || control.current === "tilt-pending")
+      return;
     const bounds = canvas.current.getBoundingClientRect();
     aimPaddle(
       game.current,
@@ -251,6 +298,13 @@ export default function Break404() {
         onClick={activate}
         onPointerMove={point}
         onPointerDown={point}
+        onPointerUp={() => {
+          touchStart.current = null;
+        }}
+        onPointerCancel={() => {
+          touchStart.current = null;
+          dragged.current = false;
+        }}
         onKeyDown={(event) => {
           if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
             event.preventDefault();
@@ -311,7 +365,7 @@ export default function Break404() {
       </p>
       <div className={styles.bottom}>
         <p className={styles.instructions}>
-          {input === "tilt" ? (
+          {input === "tilt" || input === "tilt-pending" ? (
             "TILT TO MOVE / TAP TO LAUNCH"
           ) : input === "touch" ? (
             "DRAG TO MOVE / TAP TO LAUNCH"

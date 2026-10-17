@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import Glitch404 from "@/components/artworks/Glitch404";
+import Glass404 from "@/components/artworks/Glass404";
 import Break404 from "@/components/artworks/Break404";
 
 export type Artwork = {
@@ -42,6 +43,17 @@ export const artworks: readonly Artwork[] = [
     theme: "dark",
     ownsArtworkInfo: true,
     component: Break404,
+  },
+  {
+    id: "003",
+    title: "Glass 404",
+    category: "Material",
+    createdAt: "2026-10-18",
+    description: "Something fragile. Every touch leaves a trace.",
+    instructions: "Click or tap the glass / Enter or Space to fracture",
+    thumbnail: "/thumbnails/003.svg",
+    theme: "dark",
+    component: Glass404,
   },
 ];
 

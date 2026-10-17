@@ -1,0 +1,109 @@
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at 49% 48%,
+    #15222b 0%,
+    #090e13 39%,
+    #090909 74%
+  );
+  touch-action: manipulation;
+  text-align: left;
+  cursor: crosshair;
+}
+.stage:focus-visible {
+  outline-offset: -8px;
+}
+.field {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  width: min(94%, 1120px, 145svh);
+  aspect-ratio: 2;
+  pointer-events: none;
+}
+.canvas,
+.fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.field:has(.canvas[data-enhanced="true"]) .fallback {
+  visibility: hidden;
+}
+.kicker {
+  position: absolute;
+  top: max(112px, 18%);
+  left: var(--gallery-edge, 24px);
+  right: var(--gallery-edge, 24px);
+  display: flex;
+  justify-content: space-between;
+  color: #a2bac6;
+  font:
+    8px "Courier New",
+    monospace;
+  letter-spacing: 2px;
+  pointer-events: none;
+}
+.kicker > span {
+  color: #657e8c;
+}
+.caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 15%;
+  text-align: center;
+  font:
+    9px "Courier New",
+    monospace;
+  letter-spacing: 3px;
+  color: #c0d5df;
+  pointer-events: none;
+}
+.caption > span {
+  display: block;
+  margin-top: 16px;
+  font-size: 7px;
+  letter-spacing: 2px;
+  color: #8399a5;
+}
+@media (max-width: 600px) {
+  .kicker {
+    top: 112px;
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .kicker > span {
+    max-width: 42%;
+    text-align: right;
+    line-height: 1.8;
+  }
+  .field {
+    width: 110%;
+    top: 46%;
+  }
+  .caption {
+    bottom: 28%;
+    font-size: 8px;
+    letter-spacing: 1.4px;
+  }
+}
+@media (max-height: 500px) and (min-width: 601px) {
+  .kicker {
+    top: 88px;
+  }
+  .caption {
+    bottom: 17%;
+  }
+  .field {
+    top: 48%;
+    width: min(80%, 130svh);
+  }
+}

@@ -34,6 +34,7 @@ jobs:
           test -f out/index.html
           test -f out/discover/index.html
           test -f out/404/001/index.html
+          test -f out/404/002/index.html
           test -f out/404.html
           touch out/.nojekyll
       - uses: actions/upload-pages-artifact@v3

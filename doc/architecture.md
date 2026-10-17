@@ -23,7 +23,7 @@ Day 001はCSSとPointer Eventsで成立するため、Three.jsやGLSLは導入�
 
 ## 作品レジストリ
 
-`Artwork` は `id`、`title`、`category`、`createdAt`、`description`、`instructions`、`thumbnail`、任意の `theme`、`component` を持つ。componentは引数なしのReactコンポーネント。IDは一意の3桁文字列とし、既存IDは永続的に扱う。
+`Artwork` は `id`、`title`、`category`、`createdAt`、`description`、`instructions`、`thumbnail`、任意の `theme`・`ownsArtworkInfo`、`component` を持つ。componentは引数なしのReactコンポーネント。IDは一意の3桁文字列とし、既存IDは永続的に扱う。
 
 同じ配列からHome、Discover、静的URLを構築する。`createdAt` は記録用であり公開予約の判定には使わない。配列に登録した作品はすべて公開対象。現時点ではコンポーネントを明示的にimportする。大量の重い作品を追加する際は、計測に基づいて遅延ロードを検討する。
 
@@ -34,6 +34,10 @@ Homeと個別ページのGalleryは `100dvh`（フォールバック `100svh`）
 Headerは `immersive` 指定時だけロゴ・Discover・ShuffleまたはHomeを絶対配置で重ねる。左下にDayとタイトル、右下にレジストリの `instructions` を表示する。共通UIのコンテナは `pointer-events: none`、リンク・ボタンだけ `auto` として、非操作領域から作品へクリック・タップ・移動を通す。ナビゲーションの実際のコントロールを操作しても作品のクリックは発生しない。
 
 画面端の余白にはsafe-areaを考慮し、狭い画面では文字サイズと折り返しを調整する。作品の文字サイズも画面の高さを上限にし、横向きで共通UIと重なりにくくする。Discoverでは通常のHeaderを使い、一覧とフッターを維持する。UIの表示状態を管理する新しいstateやライブラリは使用しない。
+
+`ownsArtworkInfo: true` の作品では、共通の下部タイトル・操作説明を省略し、作品自身で情報を配置する。Day 002は左上にタイトル、左下に操作説明、右下にコピーを置く。ヘッダーは共通のまま維持する。
+
+Day 002はCanvas 2Dで描画し、`lib/break404.ts` に盤面と物理を分離する。専用CSS Modulesによって他作品への影響を避ける。
 
 ## 日替わりとShuffle
 

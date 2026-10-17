@@ -3,6 +3,8 @@
 毎日作る404 not founds。**A collection of things that shouldn’t exist.**
 
 Next.js App Router / TypeScript / CSSによる静的インタラクティブアートギャラリー。
+Day 002「Break the 404」はCanvas 2Dのブロック崩し。マウス・チルト・ドラッグ・キーボードに対応します。詳細は[作品の記録](doc/day-002-break-the-404.md)を参照してください。
+
 Day 001はCSSのRGB分離、スキャンライン、ノイズ、水平スライスで構成し、Three.js・DB・API・外部フォントは使用していません。
 
 ## 起動
@@ -21,7 +23,7 @@ npm run format       # Prettierで整形
 npm run format:check # 整形チェック
 npm run lint         # ESLint（警告0件）
 npm run lint:fix     # 自動修正
-npm test             # JST境界・決定論・Shuffle
+npm test             # JST境界・決定論・Shuffle・ゲーム物理
 npm run typecheck
 npm run build        # 静的ファイルを out/ に生成
 npx playwright install chromium  # ブラウザ未導入の場合
@@ -41,10 +43,13 @@ components/
   Gallery.tsx           Home／個別ページ共通の展示
   Header.tsx            ナビゲーション
   artworks/Glitch404.tsx Day 001
+  artworks/Break404.tsx  Day 002（CSS Modules）
 lib/
   artworks.ts           型付き作品レジストリ・アセットパス
+  break404.ts           Day 002の盤面・物理
   selection.ts          JST日付・日替わり選択・Shuffle
 public/thumbnails/001.svg
+public/thumbnails/002.svg
 .github/workflows/deploy.yml
 ```
 
@@ -59,10 +64,10 @@ public/thumbnails/001.svg
 - Shuffleは2件以上なら現在以外の作品を選びます。1件なら同作品を再表示。日付変更まではその選択を保持し、再読み込みでは日替わり作品に戻ります。
 - レジストリの順序や件数が変わると、その日の選択も変わり得ます。全閲覧者で同じ公開バージョンが前提です。
 
-## Day 002を追加する
+## 次の作品（Day 003）を追加する
 
 1. `components/artworks/YourArtwork.tsx` を追加します。操作やフックを使う場合は先頭に `"use client";` を付け、デフォルトexportで引数なしの作品コンポーネントを公開します。背景と表示範囲はコンポーネント側で制御し、タイマー等の解除とreduced-motionにも対応してください。
-2. `public/thumbnails/002.svg`（PNG等も可）を追加します。推奨比率は3:2。
+2. `public/thumbnails/003.svg`（PNG等も可）を追加します。推奨比率は3:2。
 3. `lib/artworks.ts` にimportし、配列末尾に登録します。
 
 ```tsx
@@ -70,19 +75,19 @@ import YourArtwork from "@/components/artworks/YourArtwork";
 
 // artworks 配列へ追加
 {
-  id: "002",
+  id: "003",
   title: "Your Artwork",
   category: "Typography",
   createdAt: "2026-10-18",
   description: "A short description.",
   instructions: "Move to explore / Click or tap to interact",
-  thumbnail: "/thumbnails/002.svg",
+  thumbnail: "/thumbnails/003.svg",
   theme: "light", // 白背景・黒文字。省略または "dark" で黒背景
   component: YourArtwork,
 },
 ```
 
-4. テスト・ビルドし公開します。Discover、作品数、日替わり、Shuffle、`/404/002/` の静的生成に自動反映されます。`createdAt` はメタデータであり予約公開機能ではありません。登録した作品はすべて公開対象です。IDは一意の3桁文字列にしてください。
+4. テスト・ビルドし公開します。Discover、作品数、日替わり、Shuffle、`/404/003/` の静的生成に自動反映されます。`createdAt` はメタデータであり予約公開機能ではありません。登録した作品はすべて公開対象です。IDは一意の3桁文字列にしてください。
 
 現状は小規模な明示的importです。作品が重くなった際にコンポーネントを個別に遅延ロードできます。カテゴリーは登録済みで、将来一覧のフィルターに利用できます。
 
@@ -142,3 +147,5 @@ PrettierはTS/JS・CSS・JSON・Markdown・YAML等の整形、ESLintはJS/TS/Rea
 Homeと個別作品ページは作品をビューポート全体に表示します。ヘッダーは作品上のロゴ・Discover・Shuffle（個別作品ではHome）のみ。共通フッターは置かず、左下にDayとタイトル、右下にレジストリの `instructions` を表示します。作品コンポーネントのルート要素は共通ラッパー内で画面全体に広がります。
 
 UIのリンク・ボタンだけがポインター入力を受け取り、ヘッダーの余白や操作説明は作品へ入力を通します。操作説明は作品ごとに更新してください。Discoverは通常のヘッダー・一覧・フッターを維持します。
+
+作品自身で情報を配置する場合はレジストリに `ownsArtworkInfo: true` を指定すると、共通の下部タイトル・操作説明を省略できます。Day 002はタイトルを左上、操作説明を左下、コピーを右下に配置します。共通ヘッダーは維持されます。

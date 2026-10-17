@@ -52,17 +52,19 @@ export default function Gallery({ artworkId }: { artworkId?: string }) {
         <div className="artwork-wrap">
           <Art key={`${artwork.id}-${edition}`} />
         </div>
-        <div className="artwork-info">
-          <div className="artwork-identity">
-            <span className="day-label">DAY / {artwork.id}</span>
-            <h1>
-              <Link href={`/404/${artwork.id}/`}>
-                {artwork.title} <span>↗</span>
-              </Link>
-            </h1>
+        {!artwork.ownsArtworkInfo && (
+          <div className="artwork-info">
+            <div className="artwork-identity">
+              <span className="day-label">DAY / {artwork.id}</span>
+              <h1>
+                <Link href={`/404/${artwork.id}/`}>
+                  {artwork.title} <span>↗</span>
+                </Link>
+              </h1>
+            </div>
+            <p className="interaction-hint">{artwork.instructions}</p>
           </div>
-          <p className="interaction-hint">{artwork.instructions}</p>
-        </div>
+        )}
       </main>
     </div>
   );

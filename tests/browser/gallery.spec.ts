@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-17T03:00:00Z"));
+});
+
 test("home, interaction, shuffle, discover and direct artwork URL", async ({
   page,
 }, info) => {
@@ -23,10 +27,12 @@ test("home, interaction, shuffle, discover and direct artwork URL", async ({
   await expect(stage).toHaveAttribute("data-burst", "true");
   await expect(stage).toHaveAttribute("data-burst", "false");
   await page.getByRole("button", { name: "SHUFFLE" }).click();
-  await expect(stage).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "BREAK THE 404" }),
+  ).toBeVisible();
   await page.getByRole("link", { name: /DISCOVER/ }).click();
   await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
-  await expect(page.locator(".thumbnail img")).toHaveJSProperty(
+  await expect(page.locator(".thumbnail img").first()).toHaveJSProperty(
     "naturalWidth",
     900,
   );

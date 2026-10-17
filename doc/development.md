@@ -131,9 +131,34 @@ Workflowの処理順は以下。
 
 既存の [deploy.yml](../.github/workflows/deploy.yml) はmainの更新とworkflow_dispatchで起動する。手動起動も本番公開を行うため、人間の明示的な承認が必要。PRの検証は [ci.yml](../.github/workflows/ci.yml) が `pull_request` で同じ品質チェックを実行し、デプロイはしない。PR CIの権限はcontents:readだけとし、秘密情報・Pages権限・日報投稿を必要としない。公開ジョブだけがpages:writeとid-token:writeを持つ。デプロイ成功は対象コミットのActionsで確認する。初回Pages有効化には管理権限が必要で、通常のWorkflowだけで初回設定できると仮定しない。
 
+### basePath付きのローカル確認
+
+Actionsでは `GITHUB_REPOSITORY` からbasePathを導出する。このリポジトリは `/404-not-founds`、`owner.github.io` 形式では空。独自ドメイン等では `NEXT_PUBLIC_BASE_PATH` を明示する（ルートは空文字、配下は `/repo`、末尾スラッシュなし）。設計は [Static ExportとbasePath](architecture.md#static-exportとbasepath) を参照する。
+
+```sh
+NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run build
+NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
+# 手動確認
+NEXT_PUBLIC_BASE_PATH=/404-not-founds node tests/serve.mjs
+```
+
+http://localhost:3000/404-not-founds/ を開く。テストサーバーはPagesと同様にindex.html、末尾スラッシュへのリダイレクト、不明URLへの404.htmlを返す。static exportの配信に `next start` は使用しない。SPA用404リダイレクトは不要。
+
+### 初期MVPの検証履歴（2026-10-17 JST）
+
+以下は初期MVP時点の記録であり、現在のテスト件数や最新バージョンの検証結果ではない。最新結果は対象PR・コミットのCIで確認する。
+
+- `npm test`: 6件成功。
+- `npm run typecheck`: 成功。
+- ルート配信の静的ビルドとChromiumテスト: 6件成功。
+- `GITHUB_ACTIONS=true GITHUB_REPOSITORY=rulers/404-not-founds npm run build`: 成功。リポジトリ名からbasePathを自動解決。
+- 同じActions環境変数で `/404-not-founds/` 配下のブラウザテスト: PC／モバイル合計8件成功。320px幅の横はみ出しも検証。
+- ブラウザは環境に導入済みのChromiumを `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` で指定。通常・CIではPlaywrightが導入するChromiumを使用。
+- PC／モバイルのスクリーンショットでレイアウトを確認。その後、GitHubへのpushと実際のPagesデプロイも成功。
+
 ## 記録を更新する場面
 
-新作品は上記の作品別技術資料と目次、共通の設計はarchitecture、開発・公開手順はこの文書を更新する。READMEは入口と起動・追加手順を保つ。開発ルールが変わったらAGENTS.mdとSkill.mdも整合させる。
+新作品は上記の作品別技術資料と目次、共通の設計はarchitecture、開発・公開手順はこの文書を更新する。READMEはプロジェクト紹介・最小限の起動方法・詳細資料への導線を保つ。作品追加の詳細手順はSkill.mdに置く。開発ルールが変わったらAGENTS.mdとSkill.mdも整合させる。
 
 ## devlog運用
 

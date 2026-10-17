@@ -20,6 +20,29 @@
 6. [技術ドキュメントの構成](doc/development.md#作品別技術ドキュメント)に従って `doc/day-NNN-title.md` を追加し、[doc/README.md](doc/README.md) の作品一覧とPR本文からリンクする。
 7. Discoverから選択し、Homeと個別URLの同じ作品・テーマ・操作を確認する。`createdAt` による予約公開はないので、登録した作品は公開される。
 
+### レジストリへの登録例
+
+Day 003を追加する場合の例。実際の作品番号・名前・制作日に置き換える。
+
+```tsx
+import YourArtwork from "@/components/artworks/YourArtwork";
+
+// artworks 配列へ追加
+{
+  id: "003",
+  title: "Your Artwork",
+  category: "Typography",
+  createdAt: "2026-10-18",
+  description: "A short description.",
+  instructions: "Move to explore / Click or tap to interact",
+  thumbnail: "/thumbnails/003.svg",
+  theme: "light", // 白背景・黒文字。省略または "dark" で黒背景
+  component: YourArtwork,
+},
+```
+
+登録後はDiscover・作品数・ランダム展示・Shuffle・個別URLの静的生成へ反映される。`createdAt` は予約公開機能ではなくメタデータ。レジストリに登録した作品はマージ・デプロイ後にすべて公開対象となる。IDは一意の3桁文字列とする。レジストリの設計とテーマは [architecture.md](doc/architecture.md) を参照する。
+
 ## 共通ベースを変更する
 
 1. `Gallery.tsx`・`Header.tsx`・`app/globals.css`・`lib/selection.ts` の責務を [architecture.md](doc/architecture.md) で確認する。

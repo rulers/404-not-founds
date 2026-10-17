@@ -30,6 +30,8 @@ export default function Glass404() {
       frame = 0,
       last = 0,
       phaseAt = 0,
+      growthUntil = 0,
+      previousHitAt = -10000,
       state: Phase = "whole",
       alive = true,
       shock = 0,
@@ -41,6 +43,7 @@ export default function Glass404() {
       time: number;
       dragged: boolean;
     } | null = null;
+    let previousHit: Point = { x: -1000, y: -1000 };
     let target: Point = { x: 500, y: 350 };
     const cracks: { points: Point[]; at: number }[] = [];
     function polygon(c: CanvasRenderingContext2D, points: Point[]) {
@@ -91,9 +94,20 @@ export default function Glass404() {
       surface!.restore();
       for (const crack of cracks) {
         surface!.beginPath();
-        crack.points.forEach((p, i) =>
-          i ? surface!.lineTo(p.x, p.y) : surface!.moveTo(p.x, p.y),
-        );
+        crack.points
+          .slice(
+            0,
+            motion.matches
+              ? undefined
+              : 1 +
+                  Math.ceil(
+                    Math.min(1, (performance.now() - crack.at) / 180) *
+                      (crack.points.length - 1),
+                  ),
+          )
+          .forEach((p, i) =>
+            i ? surface!.lineTo(p.x, p.y) : surface!.moveTo(p.x, p.y),
+          );
         surface!.shadowBlur = 7;
         surface!.shadowColor = "#aef8e7";
         surface!.strokeStyle = "rgba(190,248,233,.38)";
@@ -119,6 +133,8 @@ export default function Glass404() {
       flying = [];
       cracks.length = 0;
       hits = 0;
+      previousHitAt = -10000;
+      growthUntil = 0;
       metrics();
       paintPlate();
     }
@@ -146,6 +162,15 @@ export default function Glass404() {
     }
     function impact(p: Point, power: number) {
       if (state === "shattered" || state === "reforming") return;
+      const now = performance.now();
+      if (
+        now - previousHitAt < 500 &&
+        Math.hypot(p.x - previousHit.x, p.y - previousHit.y) < 180
+      )
+        power = Math.min(1, power + 0.2);
+      previousHitAt = now;
+      previousHit = p;
+      growthUntil = now + 220;
       const removed = strikePane(cells, p, power);
       flying.push(...removed);
       hits++;
@@ -166,6 +191,7 @@ export default function Glass404() {
       if (!alive || document.hidden) return;
       const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
       last = now;
+      if (now < growthUntil) paintPlate();
       if (state === "shattered" && now - phaseAt > 2600) {
         change("reforming");
         reset();
@@ -228,6 +254,7 @@ export default function Glass404() {
       ctx!.restore();
       if (
         flying.length ||
+        now < growthUntil ||
         shock > 0 ||
         held ||
         state === "shattered" ||
@@ -272,6 +299,7 @@ export default function Glass404() {
       ) {
         scorePane(cells, held.point, p);
         cracks.push({ points: [held.point, p], at: performance.now() });
+        growthUntil = performance.now() + 220;
         if (cracks.length > 450) cracks.shift();
         paintPlate();
         metrics();

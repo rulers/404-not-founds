@@ -34,6 +34,6 @@ SVG、TypeScriptのばねモデル、CSS Modules。流体の厳密な計算で�
 
 単体テストは輪郭と穴の保持、局所的な変形、追従の遅れ、復元の収束、接近反応、キーボード刺激、長いフレームの制限を対象とする。ブラウザテストは実際のマウス入力とChromiumのタッチ入力、復元、キーボード、接近、320px／横向き、静的URL、Discover、JavaScriptなしを対象とする。結果はPRと日報に記録する。
 
-本物の流体・光線屈折ではない。輪郭の位相は固定し、液滴の分離・合流は行わない。実機Safari／Android・Lighthouse数値は未確認。古いブラウザでSVGのヒットテストがない場合はドラッグを行わず鑑賞表示を保つ。PRは未マージで、本番サイトへは公開しない。
+本物の流体・光線屈折ではない。輪郭の位相は固定し、液滴の分離・合流は行わない。実機Safari／Android・Lighthouse数値は未確認。古いブラウザでSVGのヒットテストがない場合はドラッグを行わず鑑賞表示を保つ。公開状態はPR・mainの履歴とPagesのデプロイ結果を参照する。
 
 確認結果：Prettier・lint・typecheck・単体テスト15件・basePath付きstatic build成功。[実装コミットのPR CI](https://github.com/rulers/404-not-founds/actions/runs/39044599025)でもブラウザ29件が成功（desktop対象外のモバイル専用7ケースは除く）。

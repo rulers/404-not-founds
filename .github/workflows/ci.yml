@@ -30,4 +30,6 @@ jobs:
           test -f out/discover/index.html
           test -f out/404/001/index.html
           test -f out/404/002/index.html
+          test -f out/404/003/index.html
+          test -f out/404/004/index.html
           test -f out/404.html

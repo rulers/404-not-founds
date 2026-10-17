@@ -1,275 +1,394 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   GLASS_PATH,
   advanceShard,
   makeCracks,
   makeShards,
-  type Crack,
+  fractureGlass,
   type Point,
-  type Shard,
+  type GlassCell,
 } from "@/lib/glass404";
 import styles from "./Glass404.module.css";
-
 type Phase = "whole" | "cracked" | "shattered" | "reforming";
+type Press = { point: Point | null; time: number };
 const words = {
-  whole: "SOMETHING FRAGILE.",
-  cracked: "EVERY TOUCH LEAVES A TRACE.",
-  shattered: "LET IT GO.",
-  reforming: "NOTHING IS EVER LOST.",
+  whole: "BREAK SOMETHING.",
+  cracked: "MAKE IT YOUR MESS.",
+  shattered: "THAT FELT GOOD.",
+  reforming: "ONE MORE TIME?",
 };
 
 export default function Glass404() {
   const id = useId().replaceAll(":", "");
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const hit = useRef<(point: Point) => void>(() => {});
-  const light = useRef<Point>({ x: 300, y: 180 });
-  const [phase, setPhase] = useState<Phase>("whole");
-  const [damage, setDamage] = useState(0);
+  const canvas = useRef<HTMLCanvasElement>(null),
+    press = useRef<Press | null>(null);
+  const strike = useRef<
+      (point: Point | null, power: number, direction: Point) => void
+    >(() => {}),
+    wake = useRef<() => void>(() => {});
+  const [phase, setPhase] = useState<Phase>("whole"),
+    [hits, setHits] = useState(0),
+    [remaining, setRemaining] = useState(100);
   useEffect(() => {
-    const element = canvas.current;
-    const ctx = element?.getContext("2d");
-    if (!element || !ctx || typeof Path2D === "undefined") return;
-    const path = new Path2D(GLASS_PATH);
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    let state: Phase = "whole",
-      hits = 0,
-      start = 0,
+    const element = canvas.current,
+      ctx = element?.getContext("2d"),
+      button = element?.closest("button");
+    if (!element || !ctx || !button || typeof Path2D === "undefined") return;
+    const texture = document.createElement("canvas"),
+      plate = document.createElement("canvas");
+    texture.width = plate.width = 1000;
+    texture.height = plate.height = 500;
+    const material = texture.getContext("2d"),
+      standing = plate.getContext("2d");
+    if (!material || !standing) return;
+    const path = new Path2D(GLASS_PATH),
+      motion = matchMedia("(prefers-reduced-motion: reduce)");
+    let cells: GlassCell[] = [],
+      flying: GlassCell[] = [],
+      state: Phase = "whole",
+      frame = 0,
       last = 0,
-      frame = 0;
-    let cracks: Crack[] = [],
-      shards: Shard[] = [];
-    let impact: Point = { x: 260, y: 240 };
-    let shockAt = -10000;
-    let dirty = true;
-    let requestDraw = () => {};
-    function change(value: Phase) {
+      phaseAt = 0,
+      shockAt = -10000,
+      alive = true,
+      count = 0,
+      impact: Point = { x: 270, y: 240 },
+      force = 0;
+    function triangle(context: CanvasRenderingContext2D, points: Point[]) {
+      context.beginPath();
+      points.forEach((p, i) =>
+        i ? context.lineTo(p.x, p.y) : context.moveTo(p.x, p.y),
+      );
+      context.closePath();
+    }
+    function prepare() {
+      cells = makeShards((x, y) => ctx!.isPointInPath(path, x, y, "evenodd"), {
+        x: 500,
+        y: 250,
+      }).map((cell) => ({ ...cell, intact: true, age: 0 }));
+      flying = [];
+      count = 0;
+      setHits(0);
+      setRemaining(100);
+      material!.clearRect(0, 0, 1000, 500);
+      const fill = material!.createLinearGradient(50, 0, 950, 500);
+      [
+        [0, "#26303d"],
+        [0.2, "#b8c7da"],
+        [0.24, "#566376"],
+        [0.4, "#19202e"],
+        [0.58, "#7c8ea5"],
+        [0.62, "#d9e9f4"],
+        [0.65, "#566274"],
+        [1, "#222b3a"],
+      ].forEach(([offset, color]) =>
+        fill.addColorStop(Number(offset), String(color)),
+      );
+      material!.fillStyle = fill;
+      material!.globalAlpha = 0.8;
+      material!.fill(path, "evenodd");
+      material!.globalAlpha = 1;
+      material!.save();
+      material!.clip(path, "evenodd");
+      for (const cell of cells) {
+        triangle(material!, cell.points);
+        material!.fillStyle = `rgba(220,235,255,${Math.random() * 0.13})`;
+        material!.fill();
+        material!.strokeStyle = "rgba(234,245,255,.09)";
+        material!.lineWidth = 0.55;
+        material!.stroke();
+      }
+      material!.restore();
+      material!.save();
+      material!.translate(4, 6);
+      material!.strokeStyle = "rgba(84,110,145,.75)";
+      material!.lineWidth = 5;
+      material!.stroke(path);
+      material!.restore();
+      material!.strokeStyle = "#e4edf9";
+      material!.lineWidth = 1.4;
+      material!.stroke(path);
+      standing!.clearRect(0, 0, 1000, 500);
+      standing!.drawImage(texture, 0, 0);
+    }
+    function change(value: Phase, now = performance.now()) {
       state = value;
-      dirty = true;
+      phaseAt = now;
       setPhase(value);
     }
-    const resize = () => {
-      const bounds = element!.getBoundingClientRect();
-      const ratio = Math.min(devicePixelRatio || 1, 2);
-      element!.width = Math.round(bounds.width * ratio);
-      element!.height = Math.round(bounds.height * ratio);
-      dirty = true;
-      requestDraw();
-    };
-    const observer = new ResizeObserver(resize);
-    observer.observe(element);
-    resize();
-    function glass() {
-      const fill = ctx!.createLinearGradient(70, 20, 900, 470);
-      fill.addColorStop(0, "rgba(188,239,255,.12)");
-      fill.addColorStop(0.24, "rgba(223,249,255,.40)");
-      fill.addColorStop(0.29, "rgba(99,178,204,.09)");
-      fill.addColorStop(0.56, "rgba(160,209,225,.13)");
-      fill.addColorStop(0.72, "rgba(240,219,255,.31)");
-      fill.addColorStop(0.76, "rgba(106,180,208,.08)");
-      fill.addColorStop(1, "rgba(217,247,255,.27)");
-      ctx!.fillStyle = fill;
-      ctx!.fill(path, "evenodd");
-      ctx!.save();
-      ctx!.translate(5, 7);
-      ctx!.strokeStyle = "rgba(86,164,191,.46)";
-      ctx!.lineWidth = 5;
-      ctx!.stroke(path);
-      ctx!.restore();
-      ctx!.strokeStyle = "rgba(225,248,255,.8)";
-      ctx!.lineWidth = 1.6;
-      ctx!.stroke(path);
-      ctx!.save();
-      ctx!.clip(path, "evenodd");
-      const halo = ctx!.createRadialGradient(
-        light.current.x,
-        light.current.y,
-        0,
-        light.current.x,
-        light.current.y,
-        330,
-      );
-      halo.addColorStop(0, "rgba(240,252,255,.27)");
-      halo.addColorStop(1, "rgba(150,220,255,0)");
-      ctx!.fillStyle = halo;
-      ctx!.fillRect(0, 0, 1000, 500);
-      ctx!.strokeStyle = "rgba(220,246,255,.11)";
-      for (let x = -300; x < 1200; x += 94) {
-        ctx!.beginPath();
-        ctx!.moveTo(x, 0);
-        ctx!.lineTo(x + 370, 500);
-        ctx!.stroke();
-      }
-      ctx!.restore();
-    }
-    const stroke = (points: Point[]) => {
-      ctx!.beginPath();
-      points.forEach((p, i) =>
-        i ? ctx!.lineTo(p.x, p.y) : ctx!.moveTo(p.x, p.y),
-      );
-      ctx!.stroke();
-    };
-    const draw = (now: number) => {
-      frame = 0;
-      if (document.hidden) return;
-      const dt = last ? (now - last) / 1000 : 0;
-      last = now;
-      let age = now - start;
-      if (state === "shattered" && age > 2300) {
-        change("reforming");
-        start = now;
-        age = 0;
-      } else if (state === "reforming" && age > 1200) {
-        change("whole");
-        hits = 0;
-        cracks = [];
-        shards = [];
-        setDamage(0);
-      }
-      if (dirty || state !== "whole" || now - shockAt < 400) {
-        ctx.clearRect(0, 0, element.width, element.height);
-        ctx.save();
-        ctx.scale(element.width / 1000, element.height / 500);
-        if (state === "shattered") {
-          if (!motion.matches)
-            for (const shard of shards) {
-              advanceShard(shard, dt);
-              const cx = shard.points.reduce((sum, p) => sum + p.x, 0) / 3,
-                cy = shard.points.reduce((sum, p) => sum + p.y, 0) / 3;
-              ctx.save();
-              ctx.translate(shard.x, shard.y);
-              ctx.rotate(shard.angle);
-              ctx.translate(-cx, -cy);
-              ctx.beginPath();
-              shard.points.forEach((p, i) =>
-                i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y),
-              );
-              ctx.closePath();
-              ctx.clip();
-              ctx.globalAlpha = Math.max(0, 1 - age / 2500);
-              glass();
-              ctx.restore();
-            }
-        } else {
-          if (state === "reforming")
-            ctx.globalAlpha = motion.matches ? 1 : Math.min(1, age / 1100);
-          glass();
-          if (state === "cracked") {
-            ctx.save();
-            ctx.clip(path, "evenodd");
-            ctx.strokeStyle = "rgba(1,11,17,.85)";
-            ctx.lineWidth = 3;
-            for (const crack of cracks) stroke(crack.points);
-            ctx.translate(-0.8, -0.8);
-            ctx.strokeStyle = "rgba(234,252,255,.9)";
-            ctx.lineWidth = 0.9;
-            for (const crack of cracks) {
-              stroke(crack.points);
-              ctx.lineWidth = 0.5;
-              crack.branches.forEach(stroke);
-              ctx.lineWidth = 0.9;
-            }
-            ctx.restore();
-          }
-        }
-        const shock = (now - shockAt) / 400;
-        if (!motion.matches && shock >= 0 && shock < 1) {
-          ctx.strokeStyle = `rgba(202,245,255,${(1 - shock) * 0.55})`;
-          ctx.lineWidth = 0.8;
-          ctx.beginPath();
-          ctx.arc(impact.x, impact.y, 8 + shock * 65, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-        ctx.restore();
-        dirty = false;
-      }
-      if (state === "shattered" || state === "reforming" || now - shockAt < 400)
-        frame = requestAnimationFrame(draw);
-    };
-    const wake = () => {
-      dirty = true;
-      if (!frame && !document.hidden) {
+    const request = () => {
+      if (alive && !frame && !document.hidden) {
         last = 0;
         frame = requestAnimationFrame(draw);
       }
     };
-    hit.current = (point) => {
+    function resize() {
+      const box = element!.getBoundingClientRect(),
+        ratio = Math.min(devicePixelRatio || 1, 2);
+      element!.width = Math.round(box.width * ratio);
+      element!.height = Math.round(box.height * ratio);
+      request();
+    }
+    function draw(now: number) {
+      frame = 0;
+      if (!alive || document.hidden || !element!.isConnected) return;
+      const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
+      last = now;
+      let age = now - phaseAt;
+      if (state === "shattered" && age > 2100) {
+        change("reforming", now);
+        age = 0;
+      }
+      if (state === "reforming" && age > 1100) {
+        prepare();
+        change("whole", now);
+      }
+      ctx!.clearRect(0, 0, element!.width, element!.height);
+      ctx!.save();
+      ctx!.scale(element!.width / 1000, element!.height / 500);
+      const shock = Math.max(0, 1 - (now - shockAt) / 320);
+      if (!motion.matches) {
+        ctx!.translate(
+          Math.sin(now * 0.14) * shock * force * 12,
+          Math.cos(now * 0.19) * shock * force * 7,
+        );
+        ctx!.rotate(Math.sin(now * 0.1) * shock * force * 0.004);
+      }
+      if (state === "reforming")
+        ctx!.globalAlpha = motion.matches ? 1 : Math.min(1, age / 1000);
+      if (state !== "shattered")
+        ctx!.drawImage(state === "reforming" ? texture : plate, 0, 0);
+      ctx!.globalAlpha = 1;
+      if (!motion.matches)
+        for (const cell of flying) {
+          cell.age += dt;
+          advanceShard(cell, dt);
+          if (cell.age > 2.1) continue;
+          const cx = cell.points.reduce((n, p) => n + p.x, 0) / 3,
+            cy = cell.points.reduce((n, p) => n + p.y, 0) / 3;
+          ctx!.save();
+          ctx!.translate(cell.x, cell.y);
+          ctx!.rotate(cell.angle);
+          ctx!.scale(Math.cos(cell.angle * 0.7) * 0.35 + 0.7, 1);
+          ctx!.translate(-cx, -cy);
+          triangle(ctx!, cell.points);
+          ctx!.clip();
+          ctx!.globalAlpha = Math.max(0, 1 - cell.age / 2.1);
+          ctx!.drawImage(texture, 0, 0);
+          ctx!.fillStyle = `rgba(255,255,255,${Math.max(0, Math.sin(cell.angle * 3)) * 0.7})`;
+          ctx!.fillRect(cx - 30, cy - 30, 60, 60);
+          ctx!.restore();
+        }
+      flying = flying.filter((cell) => cell.age < 2.1 && !motion.matches);
+      if (shock > 0 && !motion.matches) {
+        ctx!.strokeStyle = `rgba(255,240,218,${shock * 0.8})`;
+        ctx!.lineWidth = 1 + shock;
+        ctx!.beginPath();
+        ctx!.arc(
+          impact.x,
+          impact.y,
+          6 + (1 - shock) * (50 + force * 100),
+          0,
+          Math.PI * 2,
+        );
+        ctx!.stroke();
+      }
+      const held = press.current;
+      if (held?.point && state !== "shattered" && state !== "reforming") {
+        const power = Math.min(1, (now - held.time) / 900);
+        ctx!.strokeStyle = "#ffab65";
+        ctx!.lineWidth = 1.3;
+        ctx!.beginPath();
+        ctx!.arc(held.point.x, held.point.y, 16 + power * 25, 0, Math.PI * 2);
+        ctx!.stroke();
+        ctx!.beginPath();
+        ctx!.arc(
+          held.point.x,
+          held.point.y,
+          21 + power * 25,
+          -Math.PI / 2,
+          -Math.PI / 2 + power * Math.PI * 2,
+        );
+        ctx!.stroke();
+      }
+      ctx!.restore();
       if (
+        flying.length ||
+        shock > 0 ||
         state === "shattered" ||
         state === "reforming" ||
-        !ctx.isPointInPath(path, point.x, point.y, "evenodd")
+        held
+      )
+        frame = requestAnimationFrame(draw);
+    }
+    strike.current = (point, power, direction) => {
+      if (state === "shattered" || state === "reforming") return;
+      if (!point) {
+        const target = cells.find((cell) => cell.intact);
+        if (!target) return;
+        point = { x: target.x, y: target.y };
+      }
+      if (
+        point.x < 0 ||
+        point.x >= 1000 ||
+        point.y < 0 ||
+        point.y >= 500 ||
+        !ctx.isPointInPath(path, point.x, point.y, "evenodd") ||
+        standing.getImageData(Math.floor(point.x), Math.floor(point.y), 1, 1)
+          .data[3] < 10
       )
         return;
+      const removed = fractureGlass(cells, point, power);
+      if (!removed.length) return;
+      count++;
+      setHits(count);
       impact = point;
+      force = 0.35 + power;
       shockAt = performance.now();
-      hits++;
-      setDamage(hits);
-      cracks.push(...makeCracks(point));
-      if (hits >= 6) {
-        shards = makeShards(
-          (x, y) => ctx.isPointInPath(path, x, y, "evenodd"),
-          point,
-        );
+      let survivors = cells.filter((cell) => cell.intact);
+      if (survivors.length / cells.length < 0.32) {
+        removed.push(...fractureGlass(cells, { x: 500, y: 250 }, 1, () => 1));
+        for (const cell of cells)
+          if (cell.intact) {
+            cell.intact = false;
+            cell.age = 0;
+            cell.vx = (cell.x - point.x) * 1.5;
+            cell.vy = -200 - Math.random() * 300;
+            removed.push(cell);
+          }
+        survivors = [];
         change("shattered");
-        start = shockAt;
       } else change("cracked");
-      wake();
+      for (const cell of removed) {
+        cell.vx += Math.max(-400, Math.min(400, direction.x * 3));
+        cell.vy += Math.max(-200, Math.min(200, direction.y * 3));
+      }
+      flying.push(...removed);
+      standing.save();
+      standing.clip(path, "evenodd");
+      standing.strokeStyle = "rgba(242,249,255,.9)";
+      standing.lineWidth = 0.85;
+      for (const crack of makeCracks(point)) {
+        standing.beginPath();
+        crack.points.forEach((p, i) =>
+          i ? standing.lineTo(p.x, p.y) : standing.moveTo(p.x, p.y),
+        );
+        standing.stroke();
+      }
+      standing.restore();
+      standing.save();
+      standing.globalCompositeOperation = "destination-out";
+      for (const cell of cells)
+        if (!cell.intact) {
+          triangle(standing, cell.points);
+          standing.fill();
+          standing.lineWidth = 1.2;
+          standing.stroke();
+        }
+      standing.restore();
+      setRemaining(Math.round((survivors.length / cells.length) * 100));
+      request();
     };
-    requestDraw = wake;
-    const move = () => wake();
+    wake.current = request;
     const visibility = () => {
+      press.current = null;
       if (document.hidden) {
         cancelAnimationFrame(frame);
         frame = 0;
       } else {
         if (state === "shattered" || state === "reforming")
-          start = performance.now();
-        wake();
+          phaseAt = performance.now();
+        request();
       }
     };
-    element.closest("button")!.addEventListener("pointermove", move);
+    const observer = new ResizeObserver(resize);
+    observer.observe(element);
+    prepare();
+    resize();
     document.addEventListener("visibilitychange", visibility);
-    motion.addEventListener("change", wake);
+    motion.addEventListener("change", request);
     element.dataset.enhanced = "true";
-    wake();
     return () => {
+      alive = false;
       cancelAnimationFrame(frame);
       observer.disconnect();
-      hit.current = () => {};
-      element.closest("button")!.removeEventListener("pointermove", move);
       document.removeEventListener("visibilitychange", visibility);
-      motion.removeEventListener("change", wake);
+      motion.removeEventListener("change", request);
+      wake.current = () => {};
+      strike.current = () => {};
+      press.current = null;
+      texture.width = plate.width = 0;
     };
   }, []);
-  function point(clientX: number, clientY: number) {
-    const bounds = canvas.current!.getBoundingClientRect();
+  function point(x: number, y: number) {
+    const box = canvas.current!.getBoundingClientRect();
     return {
-      x: ((clientX - bounds.left) / bounds.width) * 1000,
-      y: ((clientY - bounds.top) / bounds.height) * 500,
+      x: ((x - box.left) / box.width) * 1000,
+      y: ((y - box.top) / box.height) * 500,
     };
-  }
-  function strike(event: MouseEvent<HTMLButtonElement>) {
-    hit.current(
-      event.detail === 0
-        ? { x: 270, y: 240 }
-        : point(event.clientX, event.clientY),
-    );
   }
   return (
     <button
       type="button"
       className={styles.stage}
       data-glass-phase={phase}
-      data-damage={damage}
-      aria-label="Glass 404: click or tap the glass, or press Enter or Space, to crack and shatter it. It will rebuild."
-      onClick={strike}
-      onPointerMove={(event) => {
-        light.current = point(event.clientX, event.clientY);
+      data-damage={hits}
+      data-remaining={remaining}
+      aria-label="Glass 404: click or tap to chip the glass. Hold then release for a harder impact. Enter or Space breaks a remaining piece."
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        press.current = {
+          point: point(event.clientX, event.clientY),
+          time: performance.now(),
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+        wake.current();
+      }}
+      onPointerUp={(event) => {
+        const held = press.current;
+        press.current = null;
+        if (held?.point) {
+          const end = point(event.clientX, event.clientY);
+          strike.current(
+            held.point,
+            Math.min(1, (performance.now() - held.time) / 900),
+            { x: end.x - held.point.x, y: end.y - held.point.y },
+          );
+        }
+        wake.current();
+      }}
+      onPointerCancel={() => {
+        press.current = null;
+        wake.current();
+      }}
+      onLostPointerCapture={() => {
+        press.current = null;
+        wake.current();
+      }}
+      onKeyDown={(event) => {
+        if ((event.key === " " || event.key === "Enter") && !event.repeat)
+          press.current = { point: null, time: performance.now() };
+      }}
+      onClick={(event) => {
+        if (event.detail === 0) {
+          const held = press.current;
+          press.current = null;
+          strike.current(
+            null,
+            held ? Math.min(1, (performance.now() - held.time) / 900) : 0,
+            { x: 0, y: 0 },
+          );
+        }
+      }}
+      onBlur={() => {
+        press.current = null;
+        wake.current();
       }}
     >
       <span className={styles.kicker} aria-hidden="true">
-        MATERIAL STUDY / 003 <span>SiO₂ — HANDLE WITH FEELING</span>
+        03 — FRACTURE<span>HOLD YOUR BREATH. LET IT BREAK.</span>
       </span>
       <span className={styles.field}>
         <svg
@@ -278,18 +397,18 @@ export default function Glass404() {
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id={id}>
-              <stop stopColor="#9dc3d6" stopOpacity=".35" />
-              <stop offset=".45" stopColor="#e6f9ff" stopOpacity=".6" />
-              <stop offset="1" stopColor="#9fadd2" stopOpacity=".15" />
+            <linearGradient id={id} x2="1" y2="1">
+              <stop stopColor="#bdcfdf" />
+              <stop offset=".45" stopColor="#263247" />
+              <stop offset=".65" stopColor="#d8edff" />
+              <stop offset="1" stopColor="#343e50" />
             </linearGradient>
           </defs>
           <path
             d={GLASS_PATH}
             fill={`url(#${id})`}
             fillRule="evenodd"
-            stroke="#b7d4e3"
-            strokeWidth="1.5"
+            stroke="#e2edff"
           />
         </svg>
         <canvas ref={canvas} className={styles.canvas} aria-hidden="true" />
@@ -298,8 +417,8 @@ export default function Glass404() {
         {words[phase]}
         <span>
           {phase === "shattered" || phase === "reforming"
-            ? "A MOMENT. THEN AGAIN."
-            : `${String(damage).padStart(2, "0")} / 06 IMPACTS`}
+            ? "THE SILENCE AFTER."
+            : `${remaining}% REMAINS — HOLD, AIM, RELEASE`}
         </span>
       </span>
     </button>

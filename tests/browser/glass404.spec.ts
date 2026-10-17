@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
 
-test("Glass 404 fractures at the material, shatters and regenerates", async ({
+test("Glass chips at the chosen point, ignores the hole and can be cleared", async ({
   page,
 }, info) => {
   const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("404/003/");
   const stage = page.getByRole("button", { name: /Glass 404:/ });
   await expect(page.locator('canvas[data-enhanced="true"]')).toBeVisible();
@@ -12,53 +12,72 @@ test("Glass 404 fractures at the material, shatters and regenerates", async ({
     path: `test-results/${info.project.name}-glass-whole.png`,
   });
   const box = (await page.locator("canvas").boundingBox())!;
-  const at = (x: number, y: number) => ({
-    x: box.x + (x / 1000) * box.width,
-    y: box.y + (y / 500) * box.height,
-  });
-  const strike = async (x: number, y: number) => {
-    const p = at(x, y);
+  const hit = async (x: number, y: number) => {
+    const p = {
+      x: box.x + (x / 1000) * box.width,
+      y: box.y + (y / 500) * box.height,
+    };
     if (info.project.name === "mobile") await page.touchscreen.tap(p.x, p.y);
     else await page.mouse.click(p.x, p.y);
   };
-  await strike(500, 250); // The hollow zero is not glass.
+  await hit(500, 250);
   await expect(stage).toHaveAttribute("data-damage", "0");
-  await strike(270, 200);
+  await hit(270, 200);
   await expect(stage).toHaveAttribute("data-damage", "1");
-  await expect(stage).toHaveAttribute("data-glass-phase", "cracked");
+  const remaining = Number(await stage.getAttribute("data-remaining"));
+  expect(remaining).toBeLessThan(100);
+  expect(remaining).toBeGreaterThan(70);
+  await hit(270, 200);
+  await expect(stage).toHaveAttribute("data-damage", "1");
   await page.screenshot({
-    path: `test-results/${info.project.name}-glass-cracked.png`,
+    path: `test-results/${info.project.name}-glass-chipped.png`,
   });
-  for (let i = 0; i < 5; i++) await strike(270, 240);
-  await expect(stage).toHaveAttribute("data-glass-phase", "shattered");
-  await expect(stage).toHaveAttribute("data-glass-phase", "reforming");
-  await expect(stage).toHaveAttribute("data-glass-phase", "whole");
-  await expect(stage).toHaveAttribute("data-damage", "0");
   await stage.focus();
-  await page.keyboard.press("Enter");
-  await expect(stage).toHaveAttribute("data-damage", "1");
-  await page.setViewportSize({ width: 320, height: 740 });
-  await expect
-    .poll(() =>
-      page.locator("canvas").evaluate((element) => {
-        const canvas = element as HTMLCanvasElement;
-        return canvas
-          .getContext("2d")!
-          .getImageData(
-            Math.floor(canvas.width * 0.27),
-            Math.floor(canvas.height * 0.48),
-            1,
-            1,
-          ).data[3];
-      }),
-    )
-    .toBeGreaterThan(0);
+  for (
+    let i = 0;
+    i < 70 && (await stage.getAttribute("data-glass-phase")) !== "shattered";
+    i++
+  )
+    await page.keyboard.press("Enter");
+  await expect(stage).toHaveAttribute("data-glass-phase", "shattered");
+  await expect(stage).toHaveAttribute("data-remaining", "0");
+  await expect(stage).toHaveAttribute("data-glass-phase", "whole", {
+    timeout: 6000,
+  });
+  await expect(stage).toHaveAttribute("data-remaining", "100");
   await page.getByRole("link", { name: /DISCOVER/ }).click();
   const card = page.getByRole("link", { name: /DAY 003/ });
   await expect(card.locator("img")).toHaveJSProperty("naturalWidth", 900);
   await card.click();
   await expect(stage).toHaveAttribute("data-damage", "0");
   expect(errors).toEqual([]);
+});
+
+test("holding an impact removes a larger area; cancelling never strikes", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("404/003/");
+  const stage = page.getByRole("button", { name: /Glass 404:/ });
+  await expect(page.locator('canvas[data-enhanced="true"]')).toBeVisible();
+  const box = (await page.locator("canvas").boundingBox())!,
+    x = box.x + box.width * 0.27,
+    y = box.y + box.height * 0.4;
+  await page.mouse.click(x, y);
+  const quick = 100 - Number(await stage.getAttribute("data-remaining"));
+  await page.reload();
+  await expect(page.locator('canvas[data-enhanced="true"]')).toBeVisible();
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await stage.dispatchEvent("pointercancel");
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-damage", "0");
+  await page.mouse.down();
+  await page.clock.runFor(950);
+  await page.mouse.up();
+  const strong = 100 - Number(await stage.getAttribute("data-remaining"));
+  expect(strong).toBeGreaterThan(quick * 2);
+  await page.screenshot({ path: "test-results/glass-charged-impact.png" });
 });
 
 test("Glass stays visible without Canvas and fits reduced-motion phone/landscape", async ({
@@ -88,14 +107,19 @@ test("Glass stays visible without Canvas and fits reduced-motion phone/landscape
   }
 });
 
-test("reduced motion preserves the fracture/rebuild cycle", async ({
+test("reduced motion preserves local destruction and regeneration", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("404/003/");
   const stage = page.getByRole("button", { name: /Glass 404:/ });
   await stage.focus();
-  for (let i = 0; i < 6; i++) await page.keyboard.press("Space");
+  for (
+    let i = 0;
+    i < 70 && (await stage.getAttribute("data-glass-phase")) !== "shattered";
+    i++
+  )
+    await page.keyboard.press("Space");
   await expect(stage).toHaveAttribute("data-glass-phase", "shattered");
   await expect(stage).toHaveAttribute("data-glass-phase", "whole", {
     timeout: 6000,

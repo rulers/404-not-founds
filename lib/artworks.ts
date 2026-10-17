@@ -51,7 +51,8 @@ export const artworks: readonly Artwork[] = [
     category: "Material",
     createdAt: "2026-10-18",
     description: "Something fragile. Every touch leaves a trace.",
-    instructions: "Click or tap the glass / Enter or Space to fracture",
+    instructions:
+      "Aim and tap to chip / Hold then release to smash / Enter or Space",
     thumbnail: "/thumbnails/003.svg",
     theme: "dark",
     component: Glass404,

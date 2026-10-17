@@ -5,13 +5,8 @@
   padding: 0;
   border: 0;
   overflow: hidden;
-  background: radial-gradient(
-    ellipse at 49% 48%,
-    #15222b 0%,
-    #090e13 39%,
-    #090909 74%
-  );
-  touch-action: manipulation;
+  background: radial-gradient(ellipse at 50% 45%, #151820, #07080b 65%);
+  touch-action: none;
   text-align: left;
   cursor: crosshair;
 }
@@ -21,9 +16,9 @@
 .field {
   position: absolute;
   left: 50%;
-  top: 48%;
+  top: 47%;
   transform: translate(-50%, -50%);
-  width: min(94%, 1120px, 145svh);
+  width: min(100%, 1230px, 155svh);
   aspect-ratio: 2;
   pointer-events: none;
 }
@@ -39,71 +34,85 @@
 }
 .kicker {
   position: absolute;
-  top: max(112px, 18%);
+  top: max(100px, 15%);
   left: var(--gallery-edge, 24px);
   right: var(--gallery-edge, 24px);
   display: flex;
   justify-content: space-between;
-  color: #a2bac6;
+  color: #ffab65;
   font:
-    8px "Courier New",
+    9px "Courier New",
     monospace;
   letter-spacing: 2px;
   pointer-events: none;
 }
 .kicker > span {
-  color: #657e8c;
+  color: #86909f;
+  font-size: 8px;
 }
 .caption {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 15%;
+  bottom: 16%;
   text-align: center;
   font:
-    9px "Courier New",
-    monospace;
-  letter-spacing: 3px;
-  color: #c0d5df;
+    700 clamp(12px, 2vw, 22px) Arial,
+    sans-serif;
+  letter-spacing: 5px;
+  color: #e2e8f2;
   pointer-events: none;
 }
 .caption > span {
   display: block;
-  margin-top: 16px;
-  font-size: 7px;
+  margin-top: 14px;
+  font:
+    8px "Courier New",
+    monospace;
   letter-spacing: 2px;
-  color: #8399a5;
+  color: #ffab65;
 }
 @media (max-width: 600px) {
   .kicker {
-    top: 112px;
-    font-size: 7px;
+    top: 110px;
+    font-size: 8px;
     letter-spacing: 1px;
   }
   .kicker > span {
-    max-width: 42%;
+    max-width: 45%;
     text-align: right;
-    line-height: 1.8;
+    line-height: 1.7;
+    font-size: 7px;
   }
   .field {
-    width: 110%;
-    top: 46%;
+    width: 115%;
+    top: 45%;
   }
   .caption {
-    bottom: 28%;
-    font-size: 8px;
-    letter-spacing: 1.4px;
+    bottom: 26%;
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+  .caption > span {
+    font-size: 7px;
+    letter-spacing: 1px;
   }
 }
 @media (max-height: 500px) and (min-width: 601px) {
   .kicker {
-    top: 88px;
+    top: 85px;
+  }
+  .field {
+    width: min(85%, 140svh);
+    top: 47%;
   }
   .caption {
     bottom: 17%;
+    font-size: 11px;
+    letter-spacing: 2px;
   }
-  .field {
-    top: 48%;
-    width: min(80%, 130svh);
+  .caption > span {
+    margin-top: 7px;
+    font-size: 6px;
   }
 }

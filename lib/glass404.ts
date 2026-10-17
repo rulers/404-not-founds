@@ -87,3 +87,33 @@ export function advanceShard(shard: Shard, elapsed: number) {
   shard.angle += shard.spin * dt;
   shard.spin *= Math.exp(-0.3 * dt);
 }
+
+export type GlassCell = Shard & { intact: boolean; age: number };
+
+// クリック回数ではなく、打点と蓄えた力で取り除く領域を決める。
+export function fractureGlass(
+  cells: GlassCell[],
+  point: Point,
+  power: number,
+  random = Math.random,
+): GlassCell[] {
+  const strength = Math.max(0, Math.min(1, power));
+  const radius = 48 + strength * 112;
+  const broken = cells.filter(
+    (cell) =>
+      cell.intact &&
+      Math.hypot(cell.x - point.x, cell.y - point.y) <
+        radius * (0.85 + random() * 0.3),
+  );
+  for (const cell of broken) {
+    cell.intact = false;
+    cell.age = 0;
+    const dx = cell.x - point.x,
+      dy = cell.y - point.y,
+      length = Math.max(12, Math.hypot(dx, dy));
+    cell.vx = (dx / length) * (180 + strength * 650) + (random() - 0.5) * 150;
+    cell.vy = (dy / length) * (120 + strength * 350) - 220 - strength * 220;
+    cell.spin = (random() - 0.5) * (8 + strength * 12);
+  }
+  return broken;
+}

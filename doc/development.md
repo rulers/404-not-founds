@@ -4,9 +4,17 @@
 
 ## ブランチ運用
 
-新しい404作品は必ずfeatureブランチで開発し、原則として1作品1ブランチとする。mainへの直接コミット・push、`git push origin HEAD:main`、force pushは禁止。共通運用の変更もfeatureブランチで行う。
+Git Flowを採用し、通常の作品開発と本番公開を分ける。main／developへの直接コミット・pushとforce pushは禁止。変更は作業ブランチへコミットし、CIと人間の明示的な承認を経たPRで統合する。Git Flow拡張CLIの導入は必須ではなく、通常のGitとGitHubのPRを使用する。
 
-作品の命名規則は `feature/404-NNN-kebab-case`。作品番号は3桁ゼロ埋め、作品名は英小文字のkebab-caseとする。例：`feature/404-003-glass`。#00の共通運用は `feature/404-000-common-development` のように区別し、新作品は実際の作品番号・名称を使用する。
+| ブランチ                     | 分岐元       | PR先・役割                                                         |
+| ---------------------------- | ------------ | ------------------------------------------------------------------ |
+| `main`                       | —            | 公開済みの履歴。release／hotfixを受け入れ、Pagesへ公開             |
+| `develop`                    | 移行時のmain | 次の公開に向けた開発統合。featureと戻し込みを受け入れる            |
+| `feature/404-NNN-kebab-case` | develop      | 作品または共通運用の変更。developへPR                              |
+| `release/<version>`          | develop      | 公開準備・不具合修正。mainへPRし、同じreleaseをdevelopへもPRで戻す |
+| `hotfix/<version>-<name>`    | main         | 公開版の緊急修正。mainへPRし、developへもPRで戻す                  |
+
+作品番号は3桁ゼロ埋め、名前は英小文字のkebab-case。原則1作品1featureとする。例：`feature/404-003-glass`。#00の共通運用は `feature/404-000-common-development` のように区別し、Day 000を作品レジストリへ登録しない。
 
 作業開始時に以下を確認する。
 
@@ -18,21 +26,37 @@ git branch --show-current
 git remote -v
 git fetch origin
 git log -1 --oneline origin/main
+git log -1 --oneline origin/develop
 ```
 
-作業ツリーがクリーンで、新規作業を最新mainから開始する場合の例：
+作業ツリーがクリーンで、新しい作品を開始する場合：
 
 ```sh
-git switch -c feature/404-003-glass origin/main
+git switch -c feature/404-003-glass origin/develop
 ```
 
-既存のfeatureブランチで継続する場合はその差分を先に確認する。未コミット変更があれば、勝手な破棄・上書き・stash等の退避は行わない。作業元や競合が今回の目的に影響する場合は、既存作業を保持してユーザーへ確認する。remote更新の取り込みでも同じ原則を守る。
+既存のfeatureで継続する場合はその差分を先に確認する。未コミット変更があれば、勝手な破棄・上書き・stash等の退避は行わない。作業元や競合が今回の目的に影響する場合は既存作業を保持してユーザーへ確認する。remote更新の取り込みでも同じ原則を守る。
+
+### releaseとhotfix
+
+- **release**：公開対象がdevelopにそろったら `release/<version>` を作成する。バージョンは既存タグを確認して決め、文書の例をそのまま採用しない。公開準備中は不具合修正と必要な文書修正に絞り、新作品は次のdevelopへ積む。
+- **hotfix**：公開版の緊急修正はmainから `hotfix/<version>-<name>` を作成する。通常の作品追加には使わない。
+- release／hotfixはmain向けPRでCI・差分・公開内容を確認し、人間の明示的な承認後にマージする。main更新がPages公開を開始するため、公開承認なしにマージしない。
+- mainへ反映したrelease／hotfixをdevelop向けの戻し込みPRにも反映する。進行中のreleaseがあれば必要なhotfixをそこへも取り込む。競合解消が必要なら対象ブランチから専用の戻し込みブランチを作り、内容を失わずPRで解決する。
+- Git Flowの分岐・統合履歴を保つため、release／hotfixのmain反映と戻し込みは原則merge commitで行い、squashで履歴を分断しない。featureもmerge commitを基本とする。
+- 公開版のタグ `v<version>` は承認済みmainの対応するマージコミットへ付け、既存タグを移動・上書きしない。タグ作成・pushは公開作業の承認範囲で行う。必要な戻し込みとCI確認が完了してから作業ブランチを削除する。
+
+### Git Flowへの初回移行
+
+developが存在しない場合は、その時点の最新mainからdevelopを一度だけ作成・pushする。これは公開済み履歴をコピーする初期化であり、新しい変更をmainへマージする操作ではない。以後のdevelop更新はPRで行う。
+
+移行前に作成した未マージfeatureのPRはdevelopへ向け直す。既存作業・履歴は破棄せず、移行後の最新コミットと新しいPR先でCIを確認する。mainを既定ブランチとして維持し、PR作成時にbaseを明示する。ブランチ保護の管理設定は別途扱う。
 
 ## Pull Request運用
 
 1. 実装・技術資料・必要な検証を完了し、`git diff --check` と差分一覧を確認する。
 2. featureブランチで対象ファイルだけをコミットし、`git push -u origin <featureブランチ名>` で同名のremoteブランチへpushする。
-3. mainをbaseとするPull Requestを作成する。GitHubではMerge Requestという名称は使用しない。
+3. featureはdevelopをbaseとするPull Requestを作成する。release／hotfixの公開PRだけmainを指定し、戻し込みはdevelop（必要なら進行中のrelease）を指定する。GitHubではMerge Requestという名称は使用しない。
 4. PRの最新コミットに対するCI結果を確認し、失敗時はログから原因を調査・修正する。接続・権限制約で確認できなければ、その事実を報告する。
 5. 変更・検証・未確認事項・PR URLを報告して人間のレビューを待つ。ここをCodexの基本的な作業完了地点とする。
 
@@ -40,7 +64,7 @@ git switch -c feature/404-003-glass origin/main
 
 PR本文は [共通テンプレート](../.github/PULL_REQUEST_TEMPLATE.md) を使用する。概要にはDay番号・作品名・コンセプト・主な操作、実装には使用技術・変更内容・選定理由、検証にはテスト・ビルド・PC／モバイル・既存作品への影響を記載する。技術資料リンクと残課題・未確認事項を含める。作品追加でない項目は対象外と明記する。
 
-PR作成とmainへのマージは別の操作。CI成功だけを承認とみなさず、人間の明示的なマージ承認を待つ。承認前のマージ・自動マージ設定・本番公開（デプロイworkflowの手動起動を含む）はしない。レビュー修正は同じfeatureブランチへ追加し、最新コミットのCIを再確認する。
+PR作成とマージは別の操作。developへの統合承認とmainへの公開承認も区別する。CI成功だけを承認とみなさず、人間の明示的なマージ承認を待つ。承認前のマージ・自動マージ設定・本番公開（デプロイworkflowの手動起動を含む）はしない。レビュー修正は同じfeatureブランチへ追加し、最新コミットのCIを再確認する。
 
 ## 作品別技術ドキュメント
 
@@ -118,7 +142,7 @@ NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
 
 公開URLは https://rulers.github.io/404-not-founds/ 。PagesのSourceは **GitHub Actions**。初回設定とデプロイは完了済み。
 
-mainへの直接pushによる旧運用は廃止する。人間が明示的に承認したPRのマージでmainを更新し、その更新を契機に公開する。PR作成だけでは公開しない。
+mainへの直接pushによる旧運用は廃止する。人間が公開を明示的に承認したrelease／hotfixのPRでmainを更新し、その更新を契機に公開する。featureはdevelopへ統合し、develop・feature・release・hotfixの更新だけでは本番公開しない。
 
 Workflowの処理順は以下。
 
@@ -129,11 +153,36 @@ Workflowの処理順は以下。
 5. 必須HTMLを確認して `.nojekyll` を配置し、outをartifact化。
 6. build成功後、Pagesへのデプロイ。
 
-既存の [deploy.yml](../.github/workflows/deploy.yml) はmainの更新とworkflow_dispatchで起動する。手動起動も本番公開を行うため、人間の明示的な承認が必要。PRの検証は [ci.yml](../.github/workflows/ci.yml) が `pull_request` で同じ品質チェックを実行し、デプロイはしない。PR CIの権限はcontents:readだけとし、秘密情報・Pages権限・日報投稿を必要としない。公開ジョブだけがpages:writeとid-token:writeを持つ。デプロイ成功は対象コミットのActionsで確認する。初回Pages有効化には管理権限が必要で、通常のWorkflowだけで初回設定できると仮定しない。
+既存の [deploy.yml](../.github/workflows/deploy.yml) はmainの更新とworkflow_dispatchで起動する。手動起動も本番公開を行うため、人間の明示的な承認が必要。PRの検証は [ci.yml](../.github/workflows/ci.yml) がmain／develop／release向けの `pull_request` で同じ品質チェックを実行し、デプロイはしない。PR CIの権限はcontents:readだけとし、秘密情報・Pages権限・日報投稿を必要としない。公開ジョブは `refs/heads/main` の場合だけ実行し、main以外を指定した手動実行からも本番公開しない。公開ジョブだけがpages:writeとid-token:writeを持つ。デプロイ成功は対象コミットのActionsで確認する。初回Pages有効化には管理権限が必要で、通常のWorkflowだけで初回設定できると仮定しない。
+
+### basePath付きのローカル確認
+
+Actionsでは `GITHUB_REPOSITORY` からbasePathを導出する。このリポジトリは `/404-not-founds`、`owner.github.io` 形式では空。独自ドメイン等では `NEXT_PUBLIC_BASE_PATH` を明示する（ルートは空文字、配下は `/repo`、末尾スラッシュなし）。設計は [Static ExportとbasePath](architecture.md#static-exportとbasepath) を参照する。
+
+```sh
+NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run build
+NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
+# 手動確認
+NEXT_PUBLIC_BASE_PATH=/404-not-founds node tests/serve.mjs
+```
+
+http://localhost:3000/404-not-founds/ を開く。テストサーバーはPagesと同様にindex.html、末尾スラッシュへのリダイレクト、不明URLへの404.htmlを返す。static exportの配信に `next start` は使用しない。SPA用404リダイレクトは不要。
+
+### 初期MVPの検証履歴（2026-10-17 JST）
+
+以下は初期MVP時点の記録であり、現在のテスト件数や最新バージョンの検証結果ではない。最新結果は対象PR・コミットのCIで確認する。
+
+- `npm test`: 6件成功。
+- `npm run typecheck`: 成功。
+- ルート配信の静的ビルドとChromiumテスト: 6件成功。
+- `GITHUB_ACTIONS=true GITHUB_REPOSITORY=rulers/404-not-founds npm run build`: 成功。リポジトリ名からbasePathを自動解決。
+- 同じActions環境変数で `/404-not-founds/` 配下のブラウザテスト: PC／モバイル合計8件成功。320px幅の横はみ出しも検証。
+- ブラウザは環境に導入済みのChromiumを `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` で指定。通常・CIではPlaywrightが導入するChromiumを使用。
+- PC／モバイルのスクリーンショットでレイアウトを確認。その後、GitHubへのpushと実際のPagesデプロイも成功。
 
 ## 記録を更新する場面
 
-新作品は上記の作品別技術資料と目次、共通の設計はarchitecture、開発・公開手順はこの文書を更新する。READMEは入口と起動・追加手順を保つ。開発ルールが変わったらAGENTS.mdとSkill.mdも整合させる。
+新作品は上記の作品別技術資料と目次、共通の設計はarchitecture、開発・公開手順はこの文書を更新する。READMEはプロジェクト紹介・最小限の起動方法・詳細資料への導線を保つ。作品追加の詳細手順はSkill.mdに置く。開発ルールが変わったらAGENTS.mdとSkill.mdも整合させる。
 
 ## devlog運用
 

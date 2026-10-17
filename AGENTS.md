@@ -36,12 +36,13 @@
 
 ## Git・Pull Request・公開
 
-- 作業前にstatus・差分・現在のブランチ・remoteのmainを確認する。既存変更を無断で破棄・上書き・退避しない。
-- 新作品は必ず `feature/404-NNN-kebab-case`（作品番号は3桁）で開発し、原則1作品1ブランチとする。共通運用の変更もfeatureブランチで行う。
-- mainへの直接コミット・push、`HEAD:main`へのpush、force pushは禁止。今回の目的に関係する変更だけをコミットし、featureブランチへpushする。
+- 作業前にstatus・差分・現在のブランチ・remoteのmain／developを確認する。既存変更を無断で破棄・上書き・退避しない。
+- Git Flowを採用する。mainは公開済み、developは開発統合。新作品はdevelopから `feature/404-NNN-kebab-case`（作品番号は3桁）を作り、原則1作品1ブランチとする。共通運用もfeatureブランチで行い、PR先はdevelop。
+- main／developへの直接コミット・pushとforce pushは禁止（移行時のdevelop初回作成を除く）。変更はfeature・release・hotfixへコミットし、PRで統合する。
 - 作品PRのタイトルは `feat(404): Day XXX - 作品名`。概要・実装・検証・技術文書リンク・残課題を記載する。[PRテンプレート](.github/PULL_REQUEST_TEMPLATE.md)を使う。
 - PR作成とCI結果確認をCodexの基本的な作業完了地点とする。CI失敗は調査・修正し、PR作成とマージを分離する。人間の明示的な承認なしにマージ・自動マージ設定・本番公開を行わない。
-- 承認後のmainへのマージがPages公開の契機になる。対象コミットのActionsを確認し、CI成功・デプロイ成功・実サイト確認を区別する。
+- 公開準備はdevelopから `release/<version>` を作り、承認後にmainへPRでマージする。同じreleaseをdevelopにもPRで戻す。緊急修正はmainから `hotfix/<version>-<name>` を作り、承認後にmainとdevelopへPRで反映する。進行中のreleaseにも必要な修正を取り込む。
+- mainへのマージがPages公開の契機になる。develop・feature・release・hotfixから本番公開しない。release／hotfix完了時のタグは承認済みmainの対象コミットへ付ける。詳細は [Git Flow手順](doc/development.md#ブランチ運用) を参照し、CI・デプロイ・実サイト確認を区別する。
 - 関係のないファイルや生成物、認証情報をコミットしない。RTK・lean-ctx等の既存設定は目的なく変更しない。
 
 ## devlog

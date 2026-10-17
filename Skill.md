@@ -6,8 +6,9 @@
 
 1. `AGENTS.md` → 関連する `doc/` の文書を読む。
 2. `git status --short`、`git diff`、`git branch --show-current`、`git remote -v` を確認する。
-3. READMEの起動方法と `package.json` を確認し、依存が未導入なら `npm ci` を実行する。
-4. 既存のコンポーネント・CSS変数・レジストリを使える範囲を確認してから編集する。
+3. [#00のブランチ運用](doc/development.md#ブランチ運用)に従い、remoteのmainを確認してfeatureブランチで作業する。未コミット変更がある場合は無断で破棄・上書き・退避しない。
+4. READMEの起動方法と `package.json` を確認し、依存が未導入なら `npm ci` を実行する。
+5. 既存のコンポーネント・CSS変数・レジストリを使える範囲を確認してから編集する。
 
 ## 作品を追加する
 
@@ -16,7 +17,7 @@
 3. 独自のクラス名、タッチ、キーボード、reduced-motion、リソース解除を実装する。WebGLは必要な作品だけに使う。
 4. `public/thumbnails/NNN.svg` 等を追加する。推奨比率3:2。外部通信なしで表示できる画像を優先する。
 5. `lib/artworks.ts` に一意の3桁ID、タイトル、category、createdAt、description、instructions、thumbnail、theme、componentを登録する。配列末尾へ追加し、既存IDは変えない。
-6. `doc/day-NNN-title.md` を追加し、[doc/README.md](doc/README.md) の作品一覧にリンクする。
+6. [技術ドキュメントの構成](doc/development.md#作品別技術ドキュメント)に従って `doc/day-NNN-title.md` を追加し、[doc/README.md](doc/README.md) の作品一覧とPR本文からリンクする。
 7. Discoverから選択し、Homeと個別URLの同じ作品・テーマ・操作を確認する。`createdAt` による予約公開はないので、登録した作品は公開される。
 
 ## 共通ベースを変更する
@@ -44,10 +45,15 @@ NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
 - PC、390px相当のモバイル、320px幅、直接URL、操作、reduced-motionを確認する。
 - CIではGitHubのリポジトリ名からbasePathを自動設定する。ローカルで明示指定したビルドと配信側のbasePathを揃える。
 
-## 公開・報告
+## Pull Request・報告
 
-1. `git diff --check` と変更一覧を確認し、今回の対象だけをステージしてコミットする。
-2. `git ls-remote origin refs/heads/main` 等でremoteを確認する。remoteが進んでいたらfetchして内容を確認し、変更を保全して取り込む。
-3. ユーザーの通常方針として `main` へpushする。作業ブランチなら `git push origin HEAD:main`。force pushは使わない。
-4. 対象コミットのActionsを確認し、失敗時は該当jobのログから修正する。
-5. 変更内容、検証結果、公開URL、残った制約を簡潔に報告する。
+1. `git diff --check` と変更一覧を確認し、featureブランチで今回の対象だけをステージしてコミットする。mainへ直接コミット・pushしない。
+2. remoteのmainと作業ブランチを確認する。更新の取り込み・競合解消では既存変更を保全し、無断の退避やforce pushをしない。
+3. featureブランチへpushし、[PRテンプレート](.github/PULL_REQUEST_TEMPLATE.md)に従ってmain向けのPull Requestを作成する。作品PRタイトルは `feat(404): Day XXX - 作品名`。#00の運用変更は変更内容が分かるタイトルにする。
+4. PRのCI結果を確認する。失敗時は原因を調査・修正し、確認できない場合は理由を報告する。
+5. 変更内容・検証結果・PR URL・未確認事項を報告してレビューを待つ。PR作成とマージを分離し、人間の明示的な承認なしにマージ・自動マージ設定・本番公開をしない。
+6. 承認後のマージ・公開を担当する場合は、mainの対象コミットのCIとデプロイを確認する。
+
+## 日報
+
+[#00のdevlog手順](doc/development.md#devlog運用)に従い、日報を生成・保存する。投稿は作品のユーザーレビュー完了承認後に行う。Cloudで認証・本運用設定が利用できなければMarkdownを残し、Localで既存設定を使って後続処理する。投稿できなくても実装・検証・PR作成とは切り分けて報告する。

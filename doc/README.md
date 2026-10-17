@@ -18,3 +18,5 @@
 | 002 | Break the 404 | [コンセプトと技術](day-002-break-the-404.md) | [/404/002/](https://rulers.github.io/404-not-founds/404/002/) |
 
 作品追加時はこの表と `lib/artworks.ts` を更新します。公開サイトは [こちら](https://rulers.github.io/404-not-founds/)。
+
+- Day 003 — [Glass 404：コンセプトと技術](day-003-glass-404.md)（`/404/003/`、PRレビュー対象）

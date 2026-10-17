@@ -159,21 +159,28 @@ test("immersive UI fills the viewport and passes non-actionable areas to the art
 test("Home draws again on reload and on return from a fixed artwork", async ({
   page,
 }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("./");
+  const homeURL = page.url();
+  await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
+  await page.getByRole("link", { name: /DISCOVER/ }).click();
+  const lastTitle = await page.locator(".art-card h2").last().innerText();
+  await page.getByRole("link", { name: /^HOME/ }).click();
+  await expect(page).toHaveURL(homeURL);
   await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
   await page.evaluate(() => sessionStorage.setItem("testRandom", "0.99"));
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "BREAK THE 404" }),
-  ).toBeVisible();
+  await expect(page.locator(".exhibition h1")).toContainText(lastTitle);
   await page.goto("404/001/");
   await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
   await page.getByRole("link", { name: /^HOME/ }).click();
-  await expect(
-    page.getByRole("heading", { name: "BREAK THE 404" }),
-  ).toBeVisible();
+  await expect(page).toHaveURL(homeURL);
+  await expect(page.locator(".exhibition h1")).toContainText(lastTitle);
   await page.getByRole("link", { name: /DISCOVER/ }).click();
   await page.evaluate(() => sessionStorage.setItem("testRandom", "0"));
   await page.getByRole("link", { name: /^HOME/ }).click();
+  await expect(page).toHaveURL(homeURL);
   await expect(page.getByRole("heading", { name: "Glitch 404" })).toBeVisible();
+  expect(errors).toEqual([]);
 });

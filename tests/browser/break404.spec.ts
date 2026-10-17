@@ -175,6 +175,12 @@ test("tilt calibration, dead zone, rotation, sensor loss and re-enable", async (
   page,
 }, info) => {
   test.skip(info.project.name !== "mobile", "Touch device only");
+  await page.addInitScript(() =>
+    Object.defineProperty(DeviceOrientationEvent, "requestPermission", {
+      value: async () => "granted",
+      configurable: true,
+    }),
+  );
   await page.goto("404/002/");
   const stage = page.locator("[data-phase]");
   const send = async (gamma: number | null, beta = 0) => {
@@ -193,6 +199,7 @@ test("tilt calibration, dead zone, rotation, sensor loss and re-enable", async (
     );
   };
   await page.getByRole("button", { name: "ENABLE TILT" }).tap();
+  await expect(stage).toHaveAttribute("data-control", "tilt");
   await send(15);
   await send(16);
   await expect.poll(() => paddlePosition(page)).toBeGreaterThan(0.47);

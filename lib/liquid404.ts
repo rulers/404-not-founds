@@ -106,9 +106,18 @@ export function grabLiquid(s: Liquid, x: number, y: number): boolean {
   s.formed = false;
   s.pointer = { x, y };
   const center = s.drops[near];
-  for (const p of s.drops) {
+  // Keep the grip local even while a newly-created pool is very dense.
+  const picked = new Set(
+    s.drops
+      .map((p, i) => ({ i, d: Math.hypot(p.x - center.x, p.y - center.y) }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 3)
+      .filter((p) => p.d < center.r * 2)
+      .map((p) => p.i),
+  );
+  for (const [i, p] of s.drops.entries()) {
     const d = Math.hypot(p.x - center.x, p.y - center.y);
-    p.grip = d < 30 ? Math.max(0.25, 1 - d / 40) : 0;
+    p.grip = picked.has(i) ? Math.max(0.3, 1 - d / (center.r * 3)) : 0;
     p.offsetX = p.x - x;
     p.offsetY = p.y - y;
   }

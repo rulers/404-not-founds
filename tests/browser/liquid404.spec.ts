@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 test("real mouse/touch transports and splits the body; idle forms 404 which can be grabbed again", async ({
   page,
 }, info) => {
+  test.setTimeout(60000);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("404/004");
@@ -9,6 +12,7 @@ test("real mouse/touch transports and splits the body; idle forms 404 which can 
     field = page.locator("[data-renderer]");
   await expect(field).toBeVisible();
   await expect(stage).toHaveAttribute("data-liquid-state", "resting");
+  await page.clock.runFor(500);
   await page.screenshot({
     path: `test-results/${info.project.name}-liquid-pools.png`,
   });
@@ -39,8 +43,9 @@ test("real mouse/touch transports and splits the body; idle forms 404 which can 
         touchPoints: [{ x: next, y }],
       });
     else await page.mouse.move(next, y);
-    await page.waitForTimeout(25);
+    await page.clock.runFor(25);
   }
+  await page.clock.runFor(450);
   await expect
     .poll(async () => Number(await stage.getAttribute("data-first-x")))
     .toBeGreaterThan(startX + 350);
@@ -58,6 +63,7 @@ test("real mouse/touch transports and splits the body; idle forms 404 which can 
     await session.detach();
   } else await page.mouse.up();
   await expect(stage).toHaveAttribute("data-liquid-state", "resting");
+  await page.clock.runFor(14000);
   await expect(stage).toHaveAttribute("data-liquid-state", "formed", {
     timeout: 22000,
   });

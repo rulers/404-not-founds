@@ -66,3 +66,20 @@ test("long steps, bounds and cancellation stay finite in portrait and landscape"
     }
   }
 });
+
+test("grip stays local and a fast pull tears both fresh and settled pools", () => {
+  for (const height of [330, 1100])
+    for (const settle of [0, 30]) {
+      const s = createLiquid(height);
+      for (let i = 0; i < settle; i++) stepLiquid(s, 1 / 60);
+      const p = s.drops[0],
+        x = p.x;
+      grabLiquid(s, x, p.y);
+      assert.ok(s.drops.filter((d) => d.grip > 0).length <= 3);
+      for (let i = 0; i < 30; i++) {
+        s.pointer.x = x + 520 * Math.min(1, (i + 1) / 18);
+        stepLiquid(s, 1 / 60);
+      }
+      assert.ok(s.split > 0, `height=${height},settle=${settle}`);
+    }
+});

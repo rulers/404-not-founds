@@ -1,5 +1,6 @@
 .stage {
   position: relative;
+  display: block;
   width: 100%;
   height: 100%;
   padding: 0;
@@ -8,35 +9,56 @@
   touch-action: none;
   text-align: left;
   cursor: grab;
-  background: #f0eee6;
-  color: #2537b0;
+  background: #f2f0e7;
+  color: #253db0;
 }
 .stage[data-liquid-state="touching"] {
   cursor: grabbing;
 }
 .stage:focus-visible {
+  outline: 1px solid #253db0;
   outline-offset: -8px;
 }
 .field {
   position: absolute;
-  left: 50%;
-  top: 53%;
-  transform: translate(-50%, -50%);
-  width: min(92%, 1080px, 135svh);
-  aspect-ratio: 2;
-  overflow: visible;
+  left: 5%;
+  right: 5%;
+  top: 27%;
+  bottom: 19%;
+  border-radius: 46% 38% 43% 32% / 24% 36% 29% 32%;
+  background: radial-gradient(
+    ellipse at 45% 30%,
+    #fcfbf5,
+    #e9e9de 72%,
+    #d8ddcf
+  );
+  box-shadow:
+    inset 0 2px 14px #a5b6a41a,
+    0 1px 0 #fff,
+    0 -1px 0 #bbc3b044;
   pointer-events: none;
+}
+.canvas,
+.still {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 6px #1426781c);
+}
+.field[data-enhanced="true"] .still {
+  visibility: hidden;
 }
 .invitation {
   position: absolute;
   left: 7%;
   top: 14%;
   font:
-    clamp(30px, 5.8vw, 76px)/0.83 Georgia,
+    clamp(28px, 4.6vw, 60px)/0.91 Georgia,
     serif;
   letter-spacing: -0.065em;
   pointer-events: none;
-  color: #2133c4;
 }
 .invitation em {
   font-weight: 400;
@@ -44,63 +66,81 @@
 .note {
   position: absolute;
   right: 7%;
-  top: 19%;
-  font:
-    8px/1.8 "Courier New",
-    monospace;
-  letter-spacing: 1.5px;
+  top: 17%;
+  font: 7px/1.9 monospace;
+  letter-spacing: 1px;
   text-align: right;
+  color: #62738d;
   pointer-events: none;
-  color: #5961a5;
+}
+.poolLabel {
+  position: absolute;
+  bottom: -22px;
+  left: 4%;
+  font: 6px monospace;
+  letter-spacing: 2px;
+  color: #818c91;
+  pointer-events: none;
 }
 .caption {
   position: absolute;
-  right: 9%;
-  bottom: 18%;
+  right: 8%;
+  bottom: 12%;
   font:
-    italic clamp(16px, 2.2vw, 28px) Georgia,
+    italic clamp(15px, 2vw, 24px) Georgia,
     serif;
-  color: #3343b5;
   pointer-events: none;
 }
 @media (max-width: 600px) {
   .invitation {
-    top: 16%;
-    left: 8%;
-    font-size: 48px;
+    top: 14%;
+    font-size: 39px;
   }
   .note {
-    top: 19%;
-    right: 8%;
+    top: 26%;
+    left: 8%;
+    right: auto;
+    text-align: left;
     font-size: 6px;
-    letter-spacing: 0.6px;
-    max-width: 42%;
   }
   .field {
-    width: 110%;
-    top: 51%;
+    left: 6%;
+    right: 6%;
+    top: 33%;
+    bottom: 23%;
+    border-radius: 41% 35% 39% 32% / 24% 29% 31% 32%;
   }
   .caption {
-    bottom: 24%;
-    font-size: 18px;
+    bottom: 17%;
     right: 8%;
+    font-size: 17px;
+  }
+  .poolLabel {
+    letter-spacing: 1px;
+    font-size: 5px;
   }
 }
-@media (max-height: 500px) and (min-width: 601px) {
+@media (max-height: 500px) {
   .invitation {
     top: 24%;
-    font-size: 36px;
+    font-size: 27px;
   }
   .note {
     top: 26%;
     font-size: 6px;
   }
   .field {
-    top: 54%;
-    width: min(75%, 115svh);
+    top: 35%;
+    bottom: 25%;
+    left: 27%;
+    right: 16%;
   }
   .caption {
-    bottom: 17%;
-    font-size: 15px;
+    bottom: 18%;
+    font-size: 14px;
+  }
+  .poolLabel {
+    bottom: -12px;
+    font-size: 5px;
   }
 }

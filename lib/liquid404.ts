@@ -1,184 +1,235 @@
-export type LiquidPoint = {
+export type Drop = {
   x: number;
   y: number;
-  restX: number;
-  restY: number;
   vx: number;
   vy: number;
-  group?: number;
-  grip?: number;
+  r: number;
+  tx: number;
+  ty: number;
+  grip: number;
+  offsetX: number;
+  offsetY: number;
 };
-export type LiquidInput = {
-  x: number;
-  y: number;
-  active: boolean;
-  dragging: boolean;
-  anchorX: number;
-  anchorY: number;
+export type Bond = { a: number; b: number; length: number };
+export type Liquid = {
+  drops: Drop[];
+  bonds: Bond[];
+  height: number;
+  holding: boolean;
+  pointer: { x: number; y: number };
+  idle: number;
+  formed: boolean;
+  split: number;
+  merged: number;
 };
-const four = [
-  [100, 80],
-  [164, 80],
-  [164, 236],
-  [250, 236],
-  [250, 80],
-  [314, 80],
-  [314, 420],
-  [250, 420],
-  [250, 300],
-  [100, 300],
+const glyphs = [
+  "1010,1010,1111,0010,0010,0010,0010",
+  "1111,1001,1001,1001,1001,1001,1111",
+  "1010,1010,1111,0010,0010,0010,0010",
 ];
-function polygon(points: number[][]) {
-  return points.flatMap(([x, y], i) => {
-    const next = points[(i + 1) % points.length],
-      steps = Math.ceil(Math.hypot(next[0] - x, next[1] - y) / 38);
-    return Array.from({ length: steps }, (_, j) => ({
-      x: x + ((next[0] - x) * j) / steps,
-      y: y + ((next[1] - y) * j) / steps,
-    }));
-  });
-}
-function oval(rx: number, ry: number) {
-  return Array.from({ length: 44 }, (_, i) => {
-    const t = (i / 44) * Math.PI * 2;
-    return { x: 510 + Math.cos(t) * rx, y: 250 + Math.sin(t) * ry };
-  });
-}
-export function createLiquid(): LiquidPoint[][] {
-  return [
-    polygon(four),
-    oval(103, 174),
-    oval(43, 111).reverse(),
-    polygon(four.map(([x, y]) => [x + 600, y])),
-  ].map((loop, index) =>
-    loop.map((p) => ({
-      ...p,
-      restX: p.x,
-      restY: p.y,
+export function createLiquid(height = 700): Liquid {
+  const targets: { x: number; y: number }[] = [];
+  const size = Math.min(50, height / 9),
+    startX = (1000 - size * 14) / 2,
+    startY = (height - size * 7) / 2;
+  glyphs.forEach((glyph, digit) =>
+    glyph.split(",").forEach((row, y) =>
+      [...row].forEach((bit, x) => {
+        if (bit === "1")
+          targets.push({
+            x: startX + (digit * 5 + x + 0.5) * size,
+            y: startY + (y + 0.5) * size,
+          });
+      }),
+    ),
+  );
+  const centers = [
+    [0.24, 0.31],
+    [0.64, 0.23],
+    [0.78, 0.64],
+    [0.4, 0.66],
+    [0.17, 0.79],
+  ];
+  const drops = targets.map((target, i) => {
+    const group = i % 5,
+      rank = Math.floor(i / 5),
+      angle = rank * 2.39996 + group * 1.37,
+      radius = rank ? Math.sqrt(rank) * (15 + group * 1.6) : 0;
+    return {
+      x: centers[group][0] * 1000 + Math.cos(angle) * radius,
+      y: centers[group][1] * height + Math.sin(angle) * radius,
       vx: 0,
       vy: 0,
-      group: index === 0 ? 0 : index === 3 ? 2 : 1,
-    })),
-  );
+      r: size * 0.56,
+      tx: target.x,
+      ty: target.y,
+      grip: 0,
+      offsetX: 0,
+      offsetY: 0,
+    };
+  });
+  const liquid: Liquid = {
+    drops,
+    bonds: [],
+    height,
+    holding: false,
+    pointer: { x: 0, y: 0 },
+    idle: 0,
+    formed: false,
+    split: 0,
+    merged: 0,
+  };
+  for (let a = 0; a < drops.length; a++)
+    for (let b = a + 1; b < drops.length; b++) {
+      const d = Math.hypot(drops[a].x - drops[b].x, drops[a].y - drops[b].y);
+      if (d < drops[a].r * 2.5)
+        liquid.bonds.push({ a, b, length: Math.max(d, drops[a].r * 1.3) });
+    }
+  return liquid;
 }
-export function liquidPath(loops: LiquidPoint[][]): string {
-  return loops
-    .map(
-      (loop) =>
-        loop
-          .map((p, i) => {
-            const next = loop[(i + 1) % loop.length],
-              prev = loop[(i + loop.length - 1) % loop.length];
-            const n = (v: number) => v.toFixed(2);
-            return `${i === 0 ? `M${n((prev.x + p.x) / 2)} ${n((prev.y + p.y) / 2)}` : ""}Q${n(p.x)} ${n(p.y)} ${n((p.x + next.x) / 2)} ${n((p.y + next.y) / 2)}`;
-          })
-          .join("") + "Z",
-    )
-    .join(" ");
+export function grabLiquid(s: Liquid, x: number, y: number): boolean {
+  const near = s.drops.reduce(
+    (best, p, i) =>
+      Math.hypot(p.x - x, p.y - y) <
+      Math.hypot(s.drops[best].x - x, s.drops[best].y - y)
+        ? i
+        : best,
+    0,
+  );
+  if (
+    Math.hypot(s.drops[near].x - x, s.drops[near].y - y) >
+    s.drops[near].r * 2
+  )
+    return false;
+  s.holding = true;
+  s.idle = 0;
+  s.formed = false;
+  s.pointer = { x, y };
+  const center = s.drops[near];
+  // Keep the grip local even while a newly-created pool is very dense.
+  const picked = new Set(
+    s.drops
+      .map((p, i) => ({ i, d: Math.hypot(p.x - center.x, p.y - center.y) }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 3)
+      .filter((p) => p.d < center.r * 2)
+      .map((p) => p.i),
+  );
+  for (const [i, p] of s.drops.entries()) {
+    const d = Math.hypot(p.x - center.x, p.y - center.y);
+    p.grip = picked.has(i) ? Math.max(0.3, 1 - d / (center.r * 3)) : 0;
+    p.offsetX = p.x - x;
+    p.offsetY = p.y - y;
+  }
+  return true;
+}
+export function releaseLiquid(s: Liquid, cancel = false) {
+  s.holding = false;
+  for (const p of s.drops) {
+    if (cancel) {
+      p.vx *= 0.2;
+      p.vy *= 0.2;
+    }
+    p.grip = 0;
+  }
+  s.idle = 0;
+}
+export function liquidGroups(s: Liquid): number {
+  const roots = s.drops.map((_, i) => i);
+  const root = (i: number): number =>
+    roots[i] === i ? i : (roots[i] = root(roots[i]));
+  for (const b of s.bonds) roots[root(b.a)] = root(b.b);
+  return new Set(roots.map((_, i) => root(i))).size;
 }
 export function stepLiquid(
-  loops: LiquidPoint[][],
-  input: LiquidInput,
+  s: Liquid,
   elapsed: number,
-  time: number,
   reduced = false,
 ): number {
-  const dt = Math.max(0, Math.min(elapsed, 1 / 30));
-  let energy = 0;
-  for (const loop of loops)
-    for (const p of loop) {
-      let tx = p.restX,
-        ty = p.restY;
-      if (!reduced) {
-        tx += Math.sin(time * 0.75 + p.restY * 0.018 + p.restX * 0.008) * 2.4;
-        ty += Math.cos(time * 0.65 + p.restX * 0.015) * 2.8;
+  const dt = Math.min(1 / 30, Math.max(0, elapsed));
+  if (!s.holding) s.idle += dt;
+  const gather = !s.holding && s.idle > 6;
+  const initialGroups = liquidGroups(s);
+  // Actual material links tear under strain; droplets are the same mass as the body.
+  s.bonds = s.bonds.filter(
+    (b) =>
+      Math.hypot(
+        s.drops[b.a].x - s.drops[b.b].x,
+        s.drops[b.a].y - s.drops[b.b].y,
+      ) <
+      (s.drops[b.a].r + s.drops[b.b].r) * 1.65,
+  );
+  const tornGroups = liquidGroups(s);
+  if (tornGroups > initialGroups) s.split += tornGroups - initialGroups;
+  const linked = new Set(s.bonds.map((b) => `${b.a}:${b.b}`));
+  for (let a = 0; a < s.drops.length; a++)
+    for (let b = a + 1; b < s.drops.length; b++) {
+      const p = s.drops[a],
+        q = s.drops[b],
+        dx = q.x - p.x,
+        dy = q.y - p.y,
+        d = Math.max(0.01, Math.hypot(dx, dy)),
+        radius = p.r + q.r,
+        minimum = radius * 0.68;
+      if (d < radius * 1.2 && !linked.has(`${a}:${b}`) && !gather) {
+        s.bonds.push({ a, b, length: Math.max(minimum, d) });
+        linked.add(`${a}:${b}`);
       }
-      if (input.dragging) {
-        const group = input.anchorX < 365 ? 0 : input.anchorX < 665 ? 1 : 2;
-        const weight =
-          p.grip ??
-          (p.group === group
-            ? Math.exp(
-                -(
-                  (p.restX - input.anchorX) ** 2 +
-                  (p.restY - input.anchorY) ** 2
-                ) /
-                  (2 * 130 ** 2),
-              )
-            : 0);
-        const dx = Math.max(-360, Math.min(360, input.x - input.anchorX)),
-          dy = Math.max(-280, Math.min(280, input.y - input.anchorY));
-        const stretch = Math.min(1, 350 / Math.max(1, Math.hypot(dx, dy)));
-        tx += dx * stretch * weight;
-        ty += dy * stretch * weight;
-      } else if (input.active) {
-        const dx = p.restX - input.x,
-          dy = p.restY - input.y,
-          distance = Math.hypot(dx, dy);
-        if (distance < 145 && distance > 0) {
-          const weight = (1 - distance / 145) ** 2 * (reduced ? 7 : 24);
-          tx += (dx / distance) * weight;
-          ty += (dy / distance) * weight;
-        }
+      if (d < minimum) {
+        const force = (minimum - d) * 32;
+        p.vx -= (dx / d) * force * dt;
+        p.vy -= (dy / d) * force * dt;
+        q.vx += (dx / d) * force * dt;
+        q.vy += (dy / d) * force * dt;
       }
-      p.vx += (tx - p.x) * (reduced ? 48 : 30) * dt;
-      p.vy += (ty - p.y) * (reduced ? 48 : 30) * dt;
-      const damping = Math.exp(-(reduced ? 17 : 7.5) * dt);
-      p.vx *= damping;
-      p.vy *= damping;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      energy = Math.max(
-        energy,
-        Math.abs(p.x - tx) +
-          Math.abs(p.y - ty) +
-          Math.abs(p.vx) +
-          Math.abs(p.vy),
-      );
     }
+  if (!gather)
+    for (const b of s.bonds) {
+      const p = s.drops[b.a],
+        q = s.drops[b.b],
+        dx = q.x - p.x,
+        dy = q.y - p.y,
+        d = Math.max(0.01, Math.hypot(dx, dy)),
+        force = (d - b.length) * 12;
+      const fx = (dx / d) * force * dt,
+        fy = (dy / d) * force * dt;
+      p.vx += fx;
+      p.vy += fy;
+      q.vx -= fx;
+      q.vy -= fy;
+    }
+  let energy = 0,
+    error = 0;
+  for (const p of s.drops) {
+    if (s.holding && p.grip) {
+      p.vx += (s.pointer.x + p.offsetX - p.x) * p.grip * 180 * dt;
+      p.vy += (s.pointer.y + p.offsetY - p.y) * p.grip * 180 * dt;
+    }
+    if (gather) {
+      p.vx += (p.tx - p.x) * 5 * dt;
+      p.vy += (p.ty - p.y) * 5 * dt;
+    }
+    const damping = Math.exp(
+      -(s.holding ? 5 : gather ? 6 : reduced ? 5 : 2.5) * dt,
+    );
+    p.vx = Math.max(-1600, Math.min(1600, p.vx * damping));
+    p.vy = Math.max(-1600, Math.min(1600, p.vy * damping));
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    const pad = p.r * 1.3;
+    if (p.x < pad || p.x > 1000 - pad) {
+      p.x = Math.max(pad, Math.min(1000 - pad, p.x));
+      p.vx *= -0.3;
+    }
+    if (p.y < pad || p.y > s.height - pad) {
+      p.y = Math.max(pad, Math.min(s.height - pad, p.y));
+      p.vy *= -0.3;
+    }
+    energy += p.vx * p.vx + p.vy * p.vy;
+    error += Math.hypot(p.x - p.tx, p.y - p.ty);
+  }
+  const groups = liquidGroups(s);
+  if (groups < tornGroups) s.merged += tornGroups - groups;
+  s.formed = gather && error / s.drops.length < 8;
   return energy;
-}
-export function pulseLiquid(
-  loops: LiquidPoint[][],
-  x = 510,
-  y = 250,
-  dx = 0,
-  dy = -1,
-) {
-  for (const loop of loops)
-    for (const p of loop) {
-      const weight = Math.exp(
-        -((p.restX - x) ** 2 + (p.restY - y) ** 2) / (2 * 190 ** 2),
-      );
-      p.vx += dx * 210 * weight;
-      p.vy += dy * 210 * weight;
-    }
-}
-
-// 変形中の表面をつかみ直しても、指に近い同じ数字だけを保持する。
-export function grabLiquid(loops: LiquidPoint[][], x: number, y: number) {
-  let nearest = loops[0][0],
-    distance = Infinity;
-  for (const loop of loops)
-    for (const p of loop) {
-      const d = Math.hypot(p.x - x, p.y - y);
-      if (d < distance) {
-        nearest = p;
-        distance = d;
-      }
-    }
-  for (const loop of loops)
-    for (const p of loop)
-      p.grip =
-        p.group === nearest.group
-          ? 0.45 +
-            0.55 * Math.exp(-((p.x - x) ** 2 + (p.y - y) ** 2) / (2 * 130 ** 2))
-          : 0;
-}
-export function flingLiquid(loops: LiquidPoint[][], vx: number, vy: number) {
-  for (const loop of loops)
-    for (const p of loop) {
-      p.vx += Math.max(-900, Math.min(900, vx)) * (p.grip ?? 0) * 0.65;
-      p.vy += Math.max(-900, Math.min(900, vy)) * (p.grip ?? 0) * 0.65;
-    }
 }

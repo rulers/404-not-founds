@@ -212,6 +212,7 @@ export default function Smoke404() {
       renderer = createSmokeCanvas(cpu, texture);
       usingGL = false;
       display();
+      painted = -Infinity;
       wake();
     }
     function restored() {
@@ -220,6 +221,7 @@ export default function Smoke404() {
       usingGL = !!renderer;
       if (!renderer) renderer = createSmokeCanvas(cpu, texture);
       display();
+      painted = -Infinity;
       wake();
     }
     const observer = new ResizeObserver(resize);

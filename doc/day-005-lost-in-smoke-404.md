@@ -49,6 +49,6 @@ TypeScript / 独自WebGL / Canvas 2D / CSS Modules。Three.js、Stats.js、追�
 
 単体試験：導入タイミング、線分に沿う風・遠方への非干渉・減衰、煙の移動と復帰、reduced-motion、独自画像の再現性と透明な縁。
 
-ブラウザ試験：初期の404→遮蔽→実マウス／CDPタッチで再露出→再遮蔽、404の座標不変、描画alpha、キーボード、Canvas代替、JavaScriptなし、狭幅・横画面、DiscoverとbasePath配下の直接URL。物理時間をClockで固定し、描画速度と入力時間を分離する。検証結果・画面画像・CIはPRへ記録する。
+ブラウザ試験：初期の404→遮蔽→実マウス／CDPタッチで再露出→再遮蔽、404の座標不変、描画alpha、キーボード、Canvas代替、静止中のWebGL context loss後の再描画、JavaScriptなし、狭幅・横画面、DiscoverとbasePath配下の直接URL。物理時間をClockで固定し、描画速度と入力時間を分離する。検証結果・画面画像・CIはPRへ記録する。
 
 実機Safari／Android、実GPUでの負荷、Lighthouse数値、ユーザーによる作品の最終評価は未確認。光学的な体積散乱・本格的な流体計算ではない。元の写真素材と同じ煙模様を再現するものではない。

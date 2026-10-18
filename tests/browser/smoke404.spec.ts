@@ -178,3 +178,38 @@ test("no JavaScript leaves a legible 404 and navigation", async ({
     await context.close();
   }
 });
+
+test("a lost WebGL context repaints the Canvas fallback even when reduced motion is still", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await setup(page);
+  const stage = page.locator("[data-smoke-phase]");
+  test.skip(
+    (await stage.getAttribute("data-renderer")) !== "webgl",
+    "WebGL unavailable; the separate forced-Canvas test covers this environment.",
+  );
+  await page.clock.fastForward(5600);
+  await page.clock.runFor(40);
+  await expect(stage).toHaveAttribute("data-smoke-phase", "veiled");
+  expect(await alpha(page)).toBeGreaterThan(210);
+  const supported = await page.evaluate(() => {
+    const gl = document.querySelector(
+      "button[data-renderer] canvas",
+    ) as HTMLCanvasElement;
+    const extension = gl
+      .getContext("webgl")!
+      .getExtension("WEBGL_lose_context");
+    if (!extension) return false;
+    extension.loseContext();
+    return true;
+  });
+  test.skip(!supported, "Context loss extension unavailable.");
+  await expect(stage).toHaveAttribute("data-renderer", "canvas");
+  await page.clock.runFor(40);
+  expect(await alpha(page)).toBeGreaterThan(210);
+  await stage.focus();
+  await page.keyboard.press("Enter");
+  await page.clock.runFor(100);
+  expect(await alpha(page)).toBeLessThan(100);
+});

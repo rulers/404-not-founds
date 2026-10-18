@@ -1,118 +1,206 @@
 .stage {
   position: relative;
+  display: block;
   width: 100%;
   height: 100%;
-  padding: 0;
   border: 0;
+  padding: 0;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 45%, #151820, #07080b 65%);
+  background: #070e12;
+  color: #d5eee7;
+  cursor: crosshair;
   touch-action: none;
   text-align: left;
-  cursor: crosshair;
 }
 .stage:focus-visible {
+  outline: 1px solid #d5eee7;
   outline-offset: -8px;
 }
-.field {
-  position: absolute;
-  left: 50%;
-  top: 47%;
-  transform: translate(-50%, -50%);
-  width: min(100%, 1230px, 155svh);
-  aspect-ratio: 2;
-  pointer-events: none;
-}
+.world,
 .canvas,
-.fallback {
+.glaze {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 }
-.field:has(.canvas[data-enhanced="true"]) .fallback {
+.world {
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at 64% 46%,
+    #234a48 0,
+    #112326 20%,
+    #080f14 57%,
+    #050a0e 100%
+  );
+}
+.horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 56%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #739f91, transparent);
+  opacity: 0.3;
+}
+.floor {
+  position: absolute;
+  left: -50%;
+  width: 200%;
+  top: 56%;
+  height: 100%;
+  transform: perspective(400px) rotateX(65deg);
+  transform-origin: 50% 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 119px,
+      #8bc3af12 120px 121px
+    ),
+    repeating-linear-gradient(0deg, transparent 0 98px, #8bc3af17 99px 100px);
+  mask-image: linear-gradient(transparent, #000 25%, #000 55%, transparent);
+}
+.door {
+  position: absolute;
+  left: 61%;
+  top: 31%;
+  width: clamp(80px, 11vw, 180px);
+  height: 26%;
+  border: 1px solid #badaca44;
+  background: linear-gradient(90deg, #000a, #071e21);
+  box-shadow:
+    8px 0 28px #b9ffe529,
+    -2px 0 2px #c8ffdf75;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+.door > span {
+  font:
+    400 clamp(21px, 3vw, 42px) Georgia,
+    serif;
+  letter-spacing: 0.18em;
+  color: #daf4da;
+}
+.door small {
+  font: 5px monospace;
+  letter-spacing: 0.12em;
+  color: #a3c5b5;
+  white-space: nowrap;
+}
+.beam {
+  position: absolute;
+  left: 58%;
+  top: 56%;
+  width: 23%;
+  height: 44%;
+  background: linear-gradient(#a5e9bc24, transparent);
+  clip-path: polygon(14% 0, 61% 0, 100% 100%, 0 100%);
+  filter: blur(9px);
+}
+.glaze {
+  background: linear-gradient(
+    112deg,
+    #bce8df13,
+    transparent 30%,
+    #d4f2f014 43%,
+    transparent 44%
+  );
+  box-shadow:
+    inset 0 0 0 1px #d7fff42b,
+    inset 0 0 110px #bce8df12;
+}
+.stage:has(canvas[data-enhanced="true"]) .glaze {
   visibility: hidden;
 }
 .kicker {
   position: absolute;
-  top: max(100px, 15%);
+  top: 115px;
   left: var(--gallery-edge, 24px);
   right: var(--gallery-edge, 24px);
   display: flex;
   justify-content: space-between;
-  color: #ffab65;
-  font:
-    9px "Courier New",
-    monospace;
+  font: 8px monospace;
   letter-spacing: 2px;
+  color: #a5bfb9;
   pointer-events: none;
 }
 .kicker > span {
-  color: #86909f;
-  font-size: 8px;
+  color: #75938a;
+  font-size: 7px;
 }
 .caption {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 16%;
-  text-align: center;
+  left: var(--gallery-edge, 24px);
+  bottom: 20%;
   font:
-    700 clamp(12px, 2vw, 22px) Arial,
-    sans-serif;
-  letter-spacing: 5px;
-  color: #e2e8f2;
+    italic clamp(14px, 2vw, 25px) Georgia,
+    serif;
+  letter-spacing: 0.02em;
   pointer-events: none;
+  text-shadow: 0 2px 15px #000;
 }
 .caption > span {
   display: block;
-  margin-top: 14px;
-  font:
-    8px "Courier New",
-    monospace;
+  margin-top: 18px;
+  font: 7px monospace;
   letter-spacing: 2px;
-  color: #ffab65;
+  color: #809e92;
 }
 @media (max-width: 600px) {
+  .door {
+    left: 59%;
+    top: 39%;
+    height: 18%;
+    width: 26%;
+  }
   .kicker {
-    top: 110px;
-    font-size: 8px;
+    top: 105px;
     letter-spacing: 1px;
   }
   .kicker > span {
-    max-width: 45%;
+    max-width: 47%;
     text-align: right;
     line-height: 1.7;
-    font-size: 7px;
-  }
-  .field {
-    width: 115%;
-    top: 45%;
+    font-size: 6px;
   }
   .caption {
-    bottom: 26%;
-    font-size: 13px;
-    letter-spacing: 2px;
+    bottom: 23%;
+    max-width: 78%;
+    line-height: 1.6;
+    font-size: 18px;
   }
   .caption > span {
-    font-size: 7px;
+    font-size: 6px;
     letter-spacing: 1px;
   }
-}
-@media (max-height: 500px) and (min-width: 601px) {
-  .kicker {
-    top: 85px;
+  .floor {
+    transform: perspective(240px) rotateX(65deg);
   }
-  .field {
-    width: min(85%, 140svh);
-    top: 47%;
+  .beam {
+    width: 35%;
+  }
+  .door small {
+    font-size: 4px;
+  }
+}
+@media (max-height: 500px) {
+  .kicker {
+    top: 76px;
   }
   .caption {
-    bottom: 17%;
-    font-size: 11px;
-    letter-spacing: 2px;
+    bottom: 25%;
+    font-size: 13px;
   }
   .caption > span {
-    margin-top: 7px;
+    margin-top: 8px;
     font-size: 6px;
+  }
+  .door {
+    top: 29%;
+    height: 30%;
   }
 }

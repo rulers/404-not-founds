@@ -1,62 +1,45 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  makeCracks,
-  makeShards,
+  makePane,
+  scorePane,
+  strikePane,
   advanceShard,
-  fractureGlass,
-  type GlassCell,
+  makeCracks,
 } from "../lib/glass404.ts";
-
-test("fractures originate at the impact and vary with the seed", () => {
-  const origin = { x: 250, y: 200 };
-  const first = makeCracks(origin, () => 0.2),
-    second = makeCracks(origin, () => 0.8);
-  for (const crack of first) {
-    assert.deepEqual(crack.points[0], origin);
-    assert.ok(crack.branches.length > 0);
-  }
-  assert.notDeepEqual(first, second);
+test("pane covers the viewport, shares joints, and fractures originate at input", () => {
+  const cells = makePane(700, () => 0.5);
+  assert.ok(cells.some((c) => c.home.x < 50));
+  assert.ok(cells.some((c) => c.home.y > 650));
+  assert.ok(cells.every((c) => c.neighbors.length >= 1));
+  const origin = { x: 230, y: 300 };
+  assert.deepEqual(makeCracks(origin, () => 0.3)[0].points[0], origin);
 });
-test("fragments are bounded to the material, with gravity and angular damping", () => {
-  assert.equal(makeShards(() => false, { x: 0, y: 0 }).length, 0);
-  const shards = makeShards(
-    (x, y) => x < 300 && y < 300,
-    { x: 200, y: 200 },
-    () => 0.6,
-  );
-  assert.ok(shards.length > 0 && shards.length < 500);
-  for (const shard of shards) {
-    assert.ok(shard.x < 300 && shard.y < 300);
-    const { vy, spin } = shard;
-    advanceShard(shard, 1 / 60);
-    assert.ok(shard.vy > vy);
-    assert.ok(Math.abs(shard.spin) < Math.abs(spin));
-    assert.ok(Number.isFinite(shard.x));
-  }
+test("repeated localized impacts and scoring alter failure, with distant areas intact", () => {
+  const p = { x: 220, y: 330 },
+    plain = makePane(700, () => 0.5),
+    scored = makePane(700, () => 0.5);
+  scorePane(scored, { x: 120, y: 330 }, { x: 350, y: 330 });
+  scorePane(scored, { x: 120, y: 330 }, { x: 350, y: 330 });
+  assert.equal(strikePane(plain, p, 0, () => 0.5).length, 0);
+  assert.ok(strikePane(scored, p, 0, () => 0.5).length > 0);
+  assert.ok(strikePane(plain, p, 0, () => 0.5).length > 0);
+  assert.ok(plain.filter((c) => c.home.x > 700).every((c) => c.intact));
+  const other = makePane(700, () => 0.5);
+  strikePane(other, { x: 800, y: 300 }, 1, () => 0.5);
+  assert.ok(other.filter((c) => !c.intact).every((c) => c.home.x > 500));
 });
-
-test("impact position and charge change the damage, and an empty impact cannot break twice", () => {
-  const board = () =>
-    makeShards(
-      () => true,
-      { x: 500, y: 250 },
-      () => 0.5,
-    ).map((p) => ({ ...p, intact: true, age: 0 })) as GlassCell[];
-  const quick = board(),
-    strong = board();
-  const first = fractureGlass(quick, { x: 270, y: 200 }, 0, () => 0.5);
-  assert.ok(first.length > 0);
-  assert.equal(
-    fractureGlass(quick, { x: 270, y: 200 }, 0, () => 0.5).length,
-    0,
-  );
-  assert.ok(
-    fractureGlass(strong, { x: 270, y: 200 }, 1, () => 0.5).length >
-      first.length * 3,
-  );
-  assert.ok(quick.filter((p) => p.x > 700).every((p) => p.intact));
-  const other = board();
-  const second = fractureGlass(other, { x: 800, y: 200 }, 0, () => 0.5);
-  assert.ok(second.every((p) => p.x > 700));
+test("material loss cascades and fragments fall with angular damping", () => {
+  const cells = makePane(700, () => 0.5);
+  for (const c of cells) {
+    strikePane(cells, c.home, 1, () => 0.5);
+    if (cells.every((p) => !p.intact)) break;
+  }
+  assert.ok(cells.every((c) => !c.intact));
+  const shard = cells[0],
+    vy = shard.vy,
+    spin = shard.spin;
+  advanceShard(shard, 1 / 60);
+  assert.ok(shard.vy > vy);
+  assert.ok(Math.abs(shard.spin) <= Math.abs(spin));
 });

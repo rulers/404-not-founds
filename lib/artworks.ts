@@ -50,9 +50,10 @@ export const artworks: readonly Artwork[] = [
     title: "Glass 404",
     category: "Material",
     createdAt: "2026-10-18",
-    description: "Something fragile. Every touch leaves a trace.",
+    description:
+      "Shatter the missing world. There is something on the other side.",
     instructions:
-      "Aim and tap to chip / Hold then release to smash / Enter or Space",
+      "Drag to score / Tap or hold to strike / Arrows aim, Enter strikes",
     thumbnail: "/thumbnails/003.svg",
     theme: "dark",
     component: Glass404,

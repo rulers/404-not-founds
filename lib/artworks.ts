@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import Glitch404 from "@/components/artworks/Glitch404";
 import Glass404 from "@/components/artworks/Glass404";
 import Liquid404 from "@/components/artworks/Liquid404";
+import Smoke404 from "@/components/artworks/Smoke404";
 import Break404 from "@/components/artworks/Break404";
 
 export type Artwork = {
@@ -69,6 +70,18 @@ export const artworks: readonly Artwork[] = [
     thumbnail: "/thumbnails/004.svg",
     theme: "light",
     component: Liquid404,
+  },
+  {
+    id: "005",
+    title: "Lost in Smoke 404",
+    category: "Atmosphere",
+    createdAt: "2026-10-19",
+    description: "It was here. Part the smoke. Find what never moved.",
+    instructions:
+      "Move or swipe to part the smoke / Tap to blow / Arrows + Enter",
+    thumbnail: "/thumbnails/005.svg",
+    theme: "dark",
+    component: Smoke404,
   },
 ];
 

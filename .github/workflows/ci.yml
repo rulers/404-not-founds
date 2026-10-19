@@ -33,4 +33,5 @@ jobs:
           test -f out/404/003/index.html
           test -f out/404/004/index.html
           test -f out/404/005/index.html
+          test -f out/404/006/index.html
           test -f out/404.html

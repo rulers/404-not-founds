@@ -3,6 +3,7 @@ import Glitch404 from "@/components/artworks/Glitch404";
 import Glass404 from "@/components/artworks/Glass404";
 import Liquid404 from "@/components/artworks/Liquid404";
 import Smoke404 from "@/components/artworks/Smoke404";
+import Radio404 from "@/components/artworks/Radio404";
 import Break404 from "@/components/artworks/Break404";
 
 export type Artwork = {
@@ -82,6 +83,18 @@ export const artworks: readonly Artwork[] = [
     thumbnail: "/thumbnails/005.svg",
     theme: "dark",
     component: Smoke404,
+  },
+  {
+    id: "006",
+    title: "404 Radio",
+    category: "Sound",
+    createdAt: "2026-10-19",
+    description: "Tune into a frequency with no address. A voice, almost.",
+    instructions:
+      "Drag the dial slowly to tune / Arrow keys fine tune / Sound optional",
+    thumbnail: "/thumbnails/006.svg",
+    theme: "dark",
+    component: Radio404,
   },
 ];
 

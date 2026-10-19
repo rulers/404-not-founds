@@ -144,21 +144,21 @@ export default function Radio404() {
     function visibility() {
       release();
       clearTimeout(timer);
-      // Restart the short listening interval after a hidden tab; never skip to the ending.
-      if (model.current.phase !== "lost")
-        model.current = { ...model.current, enteredAt: null };
       if (document.hidden) {
         if (audio.current) void audio.current.context.suspend().catch(() => {});
       } else {
-        if (audio.current)
-          void audio.current.context.resume().catch(() => {
-            const failed = audio.current;
+        // Preserve acquisition in the wider holding band, but restart the wait
+        // so time spent in a hidden tab never skips the reception sequence.
+        if (model.current.phase !== "lost" && model.current.enteredAt !== null)
+          model.current = { ...model.current, enteredAt: performance.now() };
+        const resuming = audio.current;
+        if (resuming)
+          void resuming.context.resume().catch(() => {
+            if (!alive || audio.current !== resuming) return;
             audio.current = null;
-            if (failed) void failed.close().catch(() => {});
-            if (alive) {
-              setSound(false);
-              setAudioError(true);
-            }
+            void resuming.close().catch(() => {});
+            setSound(false);
+            setAudioError(true);
           });
         update(model.current.frequency);
       }
@@ -212,7 +212,8 @@ export default function Radio404() {
       setSound(true);
       setAudioError(false);
     } catch {
-      if (audio.current === current) audio.current = null;
+      if (audio.current !== current) return;
+      audio.current = null;
       if (current && current.context.state !== "closed")
         void current.close().catch(() => {});
       setSound(false);
@@ -226,10 +227,13 @@ export default function Radio404() {
       ref={root}
       className={styles.stage}
       data-phase={phase}
+      lang="ja"
       aria-label="404 Radio — 存在しない周波数を探す"
     >
       <div className={styles.scene}>
-        <p className={styles.eyebrow}>A FREQUENCY WITH NO ADDRESS</p>
+        <p className={styles.eyebrow} lang="en">
+          A FREQUENCY WITH NO ADDRESS
+        </p>
         <div className={styles.radio}>
           {/* Static original cabinet; moving scale and knob remain separate and sharp. */}
           {/* eslint-disable-next-line @next/next/no-img-element -- Local SVG has intrinsic dimensions and needs no image optimization. */}
@@ -241,7 +245,12 @@ export default function Radio404() {
             alt="木製筐体、布張りスピーカー、通気窓に光る真空管を備えた古いラジオ"
             draggable={false}
           />
-          <div ref={scale} className={styles.scale} aria-hidden="true">
+          <div
+            ref={scale}
+            className={styles.scale}
+            aria-hidden="true"
+            lang="en"
+          >
             <div className={styles.labels}>
               {[388, 396, 404, 412, 420].map((value) => (
                 <span key={value}>{value}</span>
@@ -288,7 +297,7 @@ export default function Radio404() {
             <path className={styles.flat} d="M30 15h180" />
           </svg>
           <div className={styles.caption} aria-live="polite" aria-atomic="true">
-            <strong>
+            <strong lang="en">
               {phase === "lost"
                 ? "SIGNAL NOT FOUND"
                 : phase === "receiving"
@@ -302,6 +311,7 @@ export default function Radio404() {
           <button
             className={styles.sound}
             type="button"
+            lang="en"
             aria-pressed={sound}
             onClick={() => void toggleSound()}
           >
@@ -322,7 +332,8 @@ export default function Radio404() {
       </div>
       <noscript>
         <p className={styles.noScript}>
-          404 MHz — SIGNAL NOT FOUND。探索にはJavaScriptが必要です。
+          <span lang="en">404 MHz — SIGNAL NOT FOUND</span>
+          。探索にはJavaScriptが必要です。
         </p>
       </noscript>
     </section>

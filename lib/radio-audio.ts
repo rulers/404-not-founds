@@ -32,21 +32,35 @@ export function createRadioAudio(voiceUrl: string) {
   let previous: RadioPhase = "search";
   let voiceBuffer: AudioBuffer | null = null;
   let voice: AudioBufferSourceNode | null = null;
+  let voiceStarted = false;
+  let disposed = false;
   const request = new AbortController();
+  function startVoice() {
+    if (disposed || previous !== "receiving" || !voiceBuffer || voiceStarted)
+      return;
+    voiceStarted = true;
+    voice = context.createBufferSource();
+    voice.buffer = voiceBuffer;
+    voice.connect(master);
+    voice.start(context.currentTime);
+  }
   // Decode once after opt-in; a missing asset leaves noise and the visual narrative intact.
   void fetch(voiceUrl, { signal: request.signal })
     .then((response) => {
       if (!response.ok) throw new Error("Audio unavailable");
       return response.arrayBuffer();
     })
-    .then((data) => context.decodeAudioData(data))
+    .then((data) => (disposed ? null : context.decodeAudioData(data)))
     .then((buffer) => {
-      if (context.state !== "closed") voiceBuffer = buffer;
+      if (disposed || !buffer) return;
+      voiceBuffer = buffer;
+      startVoice();
     })
     .catch(() => {});
   return {
     context,
     update(frequency: number, phase: RadioPhase) {
+      if (disposed) return;
       const time = context.currentTime;
       const strength = signalStrength(frequency);
       filter.frequency.setTargetAtTime(
@@ -60,12 +74,6 @@ export function createRadioAudio(voiceUrl: string) {
         0.06,
       );
       if (phase === "receiving" && previous !== phase) {
-        if (voiceBuffer) {
-          voice = context.createBufferSource();
-          voice.buffer = voiceBuffer;
-          voice.connect(master);
-          voice.start(time);
-        }
         tone.gain.cancelScheduledValues(time);
         tone.gain.setValueAtTime(0, time);
         [220, 277.18, 329.63].forEach((note, index) => {
@@ -75,6 +83,7 @@ export function createRadioAudio(voiceUrl: string) {
           tone.gain.linearRampToValueAtTime(0, start + 0.26);
         });
       } else if (phase !== "receiving") {
+        voiceStarted = false;
         if (voice) {
           voice.stop();
           voice.disconnect();
@@ -84,8 +93,11 @@ export function createRadioAudio(voiceUrl: string) {
         tone.gain.setTargetAtTime(0, time, 0.03);
       }
       previous = phase;
+      startVoice();
     },
     async close() {
+      if (disposed) return;
+      disposed = true;
       request.abort();
       if (voice) {
         voice.stop();

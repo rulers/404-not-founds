@@ -4,6 +4,7 @@ import Glass404 from "@/components/artworks/Glass404";
 import Liquid404 from "@/components/artworks/Liquid404";
 import Smoke404 from "@/components/artworks/Smoke404";
 import Radio404 from "@/components/artworks/Radio404";
+import VendingMachine404 from "@/components/artworks/VendingMachine404";
 import Break404 from "@/components/artworks/Break404";
 
 export type Artwork = {
@@ -95,6 +96,17 @@ export const artworks: readonly Artwork[] = [
     thumbnail: "/thumbnails/006.svg",
     theme: "dark",
     component: Radio404,
+  },
+  {
+    id: "007",
+    title: "404 Vending Machine",
+    category: "Play",
+    createdAt: "2026-10-20",
+    description: "Everything you’re missing. Nothing you can keep.",
+    instructions: "Choose / Collect / Open — Tab + Enter",
+    thumbnail: "/thumbnails/007.png",
+    theme: "light",
+    component: VendingMachine404,
   },
 ];
 

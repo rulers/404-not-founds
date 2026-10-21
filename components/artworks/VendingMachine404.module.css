@@ -1,0 +1,662 @@
+.stage {
+  --fall-x: -8%;
+  --fall-y: -340%;
+  --carry-x: 185%;
+  --carry-y: -18%;
+  position: relative;
+  overflow: auto;
+  color: #49372b;
+  background: radial-gradient(
+    ellipse at 48% 28%,
+    #fff8e5 0%,
+    #f1e3c8 64%,
+    #e0cdae 100%
+  );
+  isolation: isolate;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 68% 0 0;
+  background: linear-gradient(#dbc4a6 0, #eddec4 2%, #f5e8ce 62%);
+  border-top: 1px solid #c9b39370;
+  z-index: -1;
+}
+.wallCaption {
+  position: absolute;
+  top: 27%;
+  left: 8%;
+  display: grid;
+  gap: 10px;
+  font:
+    9px "Courier New",
+    monospace;
+  letter-spacing: 2px;
+  color: #745f48;
+}
+.wallCaption::before {
+  content: "↘";
+  font:
+    34px Georgia,
+    serif;
+  color: #a76f4a;
+}
+.composition {
+  min-height: 490px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 18px 108px;
+}
+.machine {
+  position: relative;
+  width: min(400px, calc((100dvh - 175px) * 0.667));
+  flex-shrink: 0;
+  aspect-ratio: 2 / 3;
+  margin-right: 100px;
+  filter: drop-shadow(8px 18px 15px #79513120);
+}
+.cabinet {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.shelves {
+  position: absolute;
+  left: 17.5%;
+  top: 23.2%;
+  width: 57.5%;
+  height: 44%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.slot {
+  position: relative;
+  min-width: 0;
+}
+.sample {
+  position: absolute;
+  width: 73%;
+  height: 73%;
+  top: -2%;
+  left: 13.5%;
+  filter: drop-shadow(2px 5px 3px #30201480);
+}
+.productArt {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+.productName {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 67%;
+  text-align: center;
+  color: #fff0c9;
+  font:
+    7px "Courier New",
+    monospace;
+  text-shadow: 0 1px #503423;
+}
+.coil {
+  position: absolute;
+  width: 70%;
+  height: 11%;
+  top: 64%;
+  left: 15%;
+  border-radius: 50%;
+  background: repeating-linear-gradient(
+    105deg,
+    transparent 0 9px,
+    #302b20 9px 12px,
+    #bea876 12px 14px,
+    transparent 14px 20px
+  );
+  opacity: 0.9;
+}
+.select {
+  position: absolute;
+  left: 4%;
+  bottom: -1%;
+  width: 92%;
+  height: 29%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 4px;
+  background: linear-gradient(#a97e48, #755133);
+  border: 1px solid #c7a573;
+  border-radius: 3px;
+  box-shadow: 0 3px 1px #483423;
+  padding: 0 5px;
+}
+.select span {
+  background: #30342b;
+  color: #f9eac6;
+  padding: 4px 9px;
+  font:
+    10px "Courier New",
+    monospace;
+  border-radius: 3px;
+  box-shadow: inset 0 2px 3px #0007;
+}
+.select i {
+  display: block;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3px solid #8ca58a;
+  background: radial-gradient(circle at 35% 26%, #fff5d8, #dfc698 65%, #98764d);
+  box-shadow:
+    2px 4px 1px #352e20,
+    inset 0 1px 1px #fff7;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+.select:hover:not([aria-disabled="true"]) i,
+.select:focus-visible i {
+  border-color: #d5e3ac;
+  box-shadow:
+    0 0 8px #ffdf8699,
+    2px 4px 1px #352e20;
+}
+.select:active:not([aria-disabled="true"]) i,
+.stage[data-phase="coil"] .slot[data-active="true"] i {
+  transform: translate(2px, 3px);
+  box-shadow: 0 1px 1px #352e20;
+}
+.select[aria-disabled="true"] {
+  cursor: default;
+}
+.select:focus-visible,
+.flap:focus-visible {
+  outline: 3px solid #fff4bc;
+  outline-offset: 3px;
+}
+.stage[data-phase="coil"] .slot[data-active="true"] .coil {
+  animation: wind 220ms linear infinite;
+}
+.stage[data-phase="coil"] .slot[data-active="true"] .sample {
+  animation: hesitate 1s both;
+}
+.stage:not([data-phase="idle"]):not([data-phase="coil"])
+  .slot[data-active="true"]
+  .sample {
+  opacity: 0.15;
+}
+.flap {
+  position: absolute;
+  left: 20%;
+  top: 74.8%;
+  width: 39%;
+  height: 11.7%;
+  border: 2px solid #c5a46d;
+  border-radius: 4px 4px 9px 9px;
+  background: linear-gradient(150deg, #9b682fdd, #4c361eb0 40%, #e5ac4780);
+  box-shadow:
+    inset 0 2px 1px #f5d89470,
+    0 4px 5px #131c1a;
+  transform-origin: top center;
+  transform: perspective(300px) rotateX(-9deg);
+  transition:
+    transform 0.3s,
+    background 0.3s;
+  color: #ffe4a8;
+  font:
+    6px "Courier New",
+    monospace;
+  letter-spacing: 1.5px;
+}
+.flap span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12%;
+}
+.flap:disabled {
+  cursor: default;
+}
+.stage[data-phase="ready"] .flap {
+  background: linear-gradient(150deg, #b38b48a0, #79502150 45%, #f0be6480);
+  box-shadow:
+    inset 0 2px #ffe8a3,
+    0 0 12px #f5bc5b80;
+}
+.stage[data-phase="ready"] .flap:hover {
+  transform: perspective(300px) rotateX(-25deg);
+}
+.stage[data-phase="drop"] .flap {
+  animation: flap 0.7s both;
+}
+.stage[data-phase="collect"] .flap,
+.stage[data-phase="inspect"] .flap {
+  transform: perspective(300px) rotateX(-65deg);
+}
+.cargo {
+  position: absolute;
+  width: 22%;
+  height: 22%;
+  left: 29%;
+  top: 72%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+}
+.stage[data-phase="drop"] .cargo {
+  opacity: 1;
+  animation: fall 0.7s both;
+}
+.stage[data-phase="ready"] .cargo {
+  opacity: 1;
+  transform: scale(0.7);
+}
+.stage[data-phase="collect"] .cargo {
+  opacity: 1;
+  animation: collect 0.65s cubic-bezier(0.2, 0.65, 0.25, 1) both;
+}
+.stage[data-phase="inspect"] .cargo,
+.stage[data-phase="reveal"] .cargo,
+.stage[data-phase="result"] .cargo {
+  opacity: 1;
+  transform: translate(var(--carry-x), var(--carry-y)) scale(2.1);
+}
+.lid {
+  transform-origin: 70px 45px;
+  transition: transform 0.7s cubic-bezier(0.15, 0.8, 0.2, 1);
+}
+.tissue,
+.emptyLabel {
+  opacity: 0;
+}
+.stage[data-phase="reveal"] .cargo .lid,
+.stage[data-phase="result"] .cargo .lid {
+  opacity: 0;
+}
+.stage[data-phase="reveal"] .cargo .tissue,
+.stage[data-phase="result"] .cargo .tissue,
+.stage[data-phase="result"] .cargo .emptyLabel {
+  opacity: 1;
+}
+.stage[data-product="B2"][data-phase="reveal"] .cargo .mystery {
+  transform-origin: 70px 90px;
+  animation: vanish 0.85s both;
+}
+.stage[data-product="B2"][data-phase="result"] .cargo .mystery {
+  opacity: 0;
+  transform: scale(0);
+}
+.handspace {
+  position: absolute;
+  width: 53%;
+  left: 105%;
+  top: 78%;
+  text-align: center;
+  z-index: 3;
+}
+.open,
+.receipt button {
+  color: #49372b;
+  border: 1px solid #8c7356;
+  border-radius: 30px;
+  background: #fbefd9;
+  padding: 11px 16px;
+  min-height: 44px;
+  font-size: 11px;
+  box-shadow: 0 2px 0 #a88a6140;
+}
+.open:hover,
+.receipt button:hover {
+  background: #fff8df;
+  border-color: #a73e30;
+}
+.receipt {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  font:
+    9px "Courier New",
+    monospace;
+  background: #fff5d9;
+  padding: 14px 10px 10px;
+  box-shadow: 2px 5px 6px #71573a25;
+  transform: rotate(-3deg);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 98%,
+    95% 100%,
+    90% 98%,
+    85% 100%,
+    80% 98%,
+    75% 100%,
+    70% 98%,
+    65% 100%,
+    60% 98%,
+    55% 100%,
+    50% 98%,
+    45% 100%,
+    40% 98%,
+    35% 100%,
+    30% 98%,
+    25% 100%,
+    20% 98%,
+    15% 100%,
+    10% 98%,
+    5% 100%,
+    0 98%
+  );
+}
+.receipt strong {
+  font-size: 14px;
+  letter-spacing: -0.5px;
+}
+.receipt > span:first-child {
+  letter-spacing: 2px;
+  border-bottom: 1px dashed #c9b692;
+  padding-bottom: 7px;
+  width: 100%;
+}
+.receipt small {
+  font-size: 8px;
+}
+.receipt button {
+  font-family: Arial, sans-serif;
+  margin-top: 3px;
+}
+.status {
+  position: absolute;
+  bottom: 87px;
+  left: 12%;
+  right: 12%;
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: #624d37;
+  pointer-events: none;
+}
+.noScript {
+  position: absolute;
+  bottom: 120px;
+  left: 10%;
+  right: 10%;
+  text-align: center;
+  background: #fff4da;
+  padding: 10px;
+  font-size: 12px;
+}
+@keyframes wind {
+  to {
+    background-position: 20px 0;
+  }
+}
+@keyframes hesitate {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translate(0, 5px) rotate(4deg);
+  }
+  65% {
+    transform: translate(3px, 6px) rotate(-7deg);
+  }
+  85% {
+    transform: translate(-2px, 4px) rotate(3deg);
+  }
+  100% {
+    transform: translateY(5px);
+  }
+}
+@keyframes fall {
+  0% {
+    transform: translateY(-150%) scale(0.8);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(0) scale(0.7);
+  }
+  85% {
+    transform: translateY(-10%) scale(0.7) rotate(7deg);
+  }
+  100% {
+    transform: translateY(0) scale(0.7);
+  }
+}
+@keyframes flap {
+  0%,
+  40%,
+  100% {
+    transform: perspective(300px) rotateX(-9deg);
+  }
+  70% {
+    transform: perspective(300px) rotateX(-45deg);
+  }
+}
+@keyframes collect {
+  from {
+    transform: scale(0.7);
+  }
+  to {
+    transform: translate(var(--carry-x), var(--carry-y)) scale(2.1);
+  }
+}
+@keyframes vanish {
+  0%,
+  20% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+  65% {
+    transform: scale(0.2) rotate(25deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(35deg);
+    opacity: 0;
+  }
+}
+@media (max-width: 700px) {
+  .stage {
+    --carry-x: 0%;
+    --carry-y: -3%;
+  }
+  .machine {
+    width: min(86vw, calc((100dvh - 240px) * 0.667));
+    min-width: 235px;
+    margin: 0;
+  }
+  .composition {
+    min-height: 580px;
+    padding-top: 75px;
+    padding-bottom: 155px;
+  }
+  .wallCaption {
+    display: none;
+  }
+  .handspace {
+    left: 12%;
+    top: 98%;
+    width: 65%;
+  }
+  .receipt {
+    gap: 5px;
+    padding: 9px 8px;
+  }
+  .status {
+    top: 76px;
+    bottom: auto;
+    font-size: 10px;
+  }
+  .productName {
+    font-size: 6px;
+  }
+}
+@media (max-height: 550px) and (min-width: 600px) {
+  .machine {
+    width: 260px;
+    margin-right: 100px;
+  }
+  .composition {
+    min-height: 515px;
+    padding-bottom: 80px;
+  }
+  .status {
+    bottom: auto;
+    top: 470px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage *,
+  .stage *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .stage[data-phase="drop"] .cargo {
+    transform: scale(0.7);
+  }
+  .stage[data-phase="collect"] .cargo {
+    transform: translate(var(--carry-x), var(--carry-y)) scale(2.1);
+  }
+  .stage[data-product="B2"][data-phase="reveal"] .cargo .mystery {
+    opacity: 0;
+  }
+}
+.wrapper {
+  transition:
+    opacity 0.25s,
+    transform 0.5s;
+}
+.chainLeft,
+.chainRight {
+  transform-origin: 70px 80px;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.8, 0.4) 0.25s;
+}
+.bridge {
+  transition: opacity 0.15s;
+}
+.brokenLink,
+.snap {
+  opacity: 0;
+}
+.photoCard {
+  transition: transform 0.75s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.missingImage {
+  opacity: 0;
+}
+.sleeve {
+  transition: transform 0.75s;
+}
+.stage[data-phase="reveal"] .cargo .wrapper,
+.stage[data-phase="result"] .cargo .wrapper {
+  opacity: 0;
+  transform: translateY(15px);
+}
+.stage[data-phase="reveal"] .cargo .bridge,
+.stage[data-phase="result"] .cargo .bridge {
+  opacity: 0;
+}
+.stage[data-phase="reveal"] .cargo .brokenLink,
+.stage[data-phase="result"] .cargo .brokenLink {
+  opacity: 1;
+}
+.stage[data-phase="reveal"] .cargo .snap {
+  animation: crack 0.4s both;
+}
+.stage[data-phase="reveal"] .cargo .chainLeft,
+.stage[data-phase="result"] .cargo .chainLeft {
+  transform: translate(-14px, 25px) rotate(20deg);
+}
+.stage[data-phase="reveal"] .cargo .chainRight,
+.stage[data-phase="result"] .cargo .chainRight {
+  transform: translate(22px, 33px) rotate(-23deg);
+}
+.stage[data-phase="reveal"] .cargo .photoCard,
+.stage[data-phase="result"] .cargo .photoCard {
+  transform: translate(10px, -44px) rotate(8deg);
+}
+.stage[data-phase="reveal"] .cargo .missingImage,
+.stage[data-phase="result"] .cargo .missingImage {
+  opacity: 1;
+}
+.stage[data-phase="reveal"] .cargo .sleeve,
+.stage[data-phase="result"] .cargo .sleeve {
+  transform: translateY(12px) rotate(-6deg);
+}
+.stage[data-paused="true"] * {
+  animation-play-state: paused !important;
+}
+@keyframes crack {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.openLid {
+  opacity: 0;
+}
+.stage[data-phase="reveal"] .cargo .openLid,
+.stage[data-phase="result"] .cargo .openLid {
+  opacity: 1;
+}
+.stage[data-product="A2"] {
+  --fall-x: 140%;
+}
+.stage[data-product="B1"] {
+  --fall-y: -190%;
+}
+.stage[data-product="B2"] {
+  --fall-x: 140%;
+  --fall-y: -190%;
+}
+.flap {
+  z-index: 3;
+}
+.stage[data-phase="collect"] .cargo,
+.stage[data-phase="inspect"] .cargo,
+.stage[data-phase="reveal"] .cargo,
+.stage[data-phase="result"] .cargo {
+  z-index: 4;
+}
+.handspace {
+  z-index: 5;
+}
+.select,
+.flap,
+.open,
+.receipt button {
+  scroll-margin: 80px 10px 95px;
+}
+.handspace {
+  padding-bottom: 90px;
+}
+.openLid {
+  transform-origin: 45px 53px;
+}
+.stage[data-phase="reveal"] .cargo .openLid {
+  animation: liftLid 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes liftLid {
+  from {
+    transform: rotate(-20deg) scaleY(0.1);
+  }
+  to {
+    transform: none;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useReducer, useRef } from "react";
+import { useCallback, useEffect, useId, useReducer, useRef } from "react";
 import {
   initialVend,
   phaseDuration,
@@ -343,10 +343,20 @@ export default function VendingMachine404() {
     if (phase === "inspect") focusControl(openRef.current);
     if (phase === "result") focusControl(againRef.current);
   }, [phase]);
-  function reset() {
+  const reset = useCallback(() => {
     returnFocus.current = state.product;
     dispatch({ type: "reset" });
-  }
+  }, [state.product]);
+  useEffect(() => {
+    if (!taken) return;
+    // Opening removes the focused button; some browsers also blur a disabled
+    // flap. Listen outside the artwork so Escape still works from body.
+    const cancel = (event: KeyboardEvent) => {
+      if (event.key === "Escape") reset();
+    };
+    document.addEventListener("keydown", cancel);
+    return () => document.removeEventListener("keydown", cancel);
+  }, [taken, reset]);
   const status =
     phase === "idle"
       ? "ひとつ、選んでみて。"
@@ -371,9 +381,6 @@ export default function VendingMachine404() {
       aria-label="404 Vending Machine"
       data-phase={phase}
       data-product={state.product ?? "none"}
-      onKeyDown={(e) => {
-        if (e.key === "Escape" && taken) reset();
-      }}
     >
       <div className={styles.wallCaption} aria-hidden="true">
         <span>OPEN 24 HOURS</span>

@@ -1,6 +1,9 @@
 .stage {
-  --fall-x: -8%;
-  --fall-y: -340%;
+  /* Shelf centers are 31.875% / 60.625% across and 30.79% / 52.79%
+     down the machine. Cargo spans 22% of each axis, centered at
+     40% / 83%. Translate by those center differences in cargo units. */
+  --fall-x: -36.931818%;
+  --fall-y: -237.318182%;
   --carry-x: 185%;
   --carry-y: -18%;
   position: relative;
@@ -417,10 +420,8 @@
 }
 @keyframes fall {
   0% {
-    transform: translateY(-150%) scale(0.8);
-    opacity: 0;
-  }
-  12% {
+    /* Match the sample width: 20.9875% / 22% = 0.953977. */
+    transform: translate(var(--fall-x), var(--fall-y)) scale(0.953977);
     opacity: 1;
   }
   70% {
@@ -616,14 +617,14 @@
   opacity: 1;
 }
 .stage[data-product="A2"] {
-  --fall-x: 140%;
+  --fall-x: 93.75%;
 }
 .stage[data-product="B1"] {
-  --fall-y: -190%;
+  --fall-y: -137.318182%;
 }
 .stage[data-product="B2"] {
-  --fall-x: 140%;
-  --fall-y: -190%;
+  --fall-x: 93.75%;
+  --fall-y: -137.318182%;
 }
 .flap {
   z-index: 3;

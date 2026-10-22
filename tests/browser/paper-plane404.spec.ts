@@ -52,6 +52,15 @@ test("direction and strength change real flights; the same plane returns stamped
   const stage = page.getByRole("region", { name: "404 Paper Plane" });
   const plane = page.getByRole("button", { name: /紙飛行機を飛ばす/ });
   const original = await plane.elementHandle();
+  await plane.evaluate((el) => {
+    // Capture the release pose in the input event, before any RAF can run.
+    el.addEventListener("pointerdown", () => {
+      el.dataset.testBeforeScale = el.style.getPropertyValue("--flight-scale");
+    });
+    el.addEventListener("pointerup", () => {
+      el.dataset.testSentScale = el.style.getPropertyValue("--flight-scale");
+    });
+  });
   await expect(stage).toHaveAttribute("data-stamped", "false");
   const stamp = page.locator("[data-stamp]");
   await expect(stamp).toHaveCSS("opacity", "0");
@@ -63,6 +72,11 @@ test("direction and strength change real flights; the same plane returns stamped
   ]) {
     await drag(page, info.project.name === "mobile", dx, dy);
     await expect(stage).toHaveAttribute("data-phase", "flying");
+    const scales = await plane.evaluate((el) => [
+      Number(el.dataset.testBeforeScale),
+      Number(el.dataset.testSentScale),
+    ]);
+    expect(scales[1]).toBeCloseTo(scales[0], 3);
     expect(Number(await stage.getAttribute("data-launch-angle"))).toBeCloseTo(
       Math.atan2(dy, dx),
       2,

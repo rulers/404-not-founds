@@ -54,7 +54,8 @@ export default function PaperPlane404() {
       raf = 0,
       blurred = false,
       returning = false;
-    let quietFlight = false;
+    let quietFlight = false,
+      departureScale = 1;
     function notify(next: Phase, message: string) {
       phase = next;
       stage!.dataset.phase = next;
@@ -132,8 +133,11 @@ export default function PaperPlane404() {
         quietFlight ? 0 : position.y,
         quietFlight ? restingAngle : position.angle,
         quietFlight
-          ? 1 - 0.06 * Math.sin(position.progress * Math.PI)
-          : position.scale,
+          ? departureScale * (1 - 0.06 * Math.sin(position.progress * Math.PI))
+          : position.scale *
+              (1 +
+                (departureScale - 1) *
+                  Math.pow(Math.max(0, 1 - elapsed / 650), 2)),
       );
       if (position.done) {
         stop();
@@ -157,6 +161,11 @@ export default function PaperPlane404() {
     function launch() {
       if (phase === "flying" || width <= 0 || height <= 0) return;
       releasePointer();
+      // A returned sheet is enlarged for reading. Start at that same size,
+      // then ease into the distant-flight scale rather than snapping smaller.
+      departureScale = stamped
+        ? Math.min(3.5, (width * 1.12) / flightLayout(width, height).size)
+        : 1;
       stamped = false;
       returning = false;
       elapsed = 0;
@@ -171,7 +180,7 @@ export default function PaperPlane404() {
         "flying",
         "送り出しました。存在しない宛先を探して、滑空しています。",
       );
-      paint(0, 0, quietFlight ? restingAngle : angle);
+      paint(0, 0, quietFlight ? restingAngle : angle, departureScale);
       if (!document.hidden && !blurred) raf = requestAnimationFrame(tick);
     }
     const down = (event: PointerEvent) => {
@@ -334,6 +343,8 @@ export default function PaperPlane404() {
     };
     const changeMotion = () => {
       if (phase === "flying" && motion.matches && !quietFlight) {
+        departureScale =
+          Number(plane.style.getPropertyValue("--flight-scale")) || 1;
         quietFlight = true;
         elapsed = 0;
         last = null;

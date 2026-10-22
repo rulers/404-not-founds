@@ -60,7 +60,7 @@ PR作成とmainへのマージは別の操作。CI成功だけを承認とみな
 
 ## 開発環境
 
-Node.js 24とnpmを使用する。
+Node.js 24.22.1とnpmを使用する。`.nvmrc` をローカルとCIの共通のバージョン指定とし、`nvm install && nvm use` で切り替える。Next.jsとeslint-config-nextは16.4.2以降の16系を使用する。
 
 ```sh
 npm ci

@@ -13,7 +13,7 @@ Day 001はCSSのRGB分離、スキャンライン、ノイズ、水平スライ�
 
 ## 起動
 
-Node.js 24、npmを使用します。
+Node.js 24.22.1、npmを使用します。`.nvmrc` に合わせて `nvm install && nvm use` で切り替えます。
 
 ```sh
 npm ci

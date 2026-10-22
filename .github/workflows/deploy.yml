@@ -40,6 +40,7 @@ jobs:
           test -f out/404/005/index.html
           test -f out/404/006/index.html
           test -f out/404/007/index.html
+          test -f out/404/008/index.html
           test -f out/404.html
           touch out/.nojekyll
       - uses: actions/upload-pages-artifact@v3

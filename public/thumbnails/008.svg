@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#c9e0e5"/><stop offset="1" stop-color="#f4eddc"/></linearGradient><linearGradient id="wing" x2=".5" y2="1"><stop stop-color="#fffefa"/><stop offset="1" stop-color="#becfd3"/></linearGradient><filter id="cloud"><feGaussianBlur stdDeviation="16"/></filter><filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="9" flood-color="#54737e" flood-opacity=".2"/></filter></defs>
+<rect width="900" height="600" fill="url(#sky)"/>
+<g fill="#fffff5" opacity=".45" filter="url(#cloud)"><ellipse cx="770" cy="150" rx="180" ry="40"/><ellipse cx="700" cy="130" rx="85" ry="50"/><ellipse cx="90" cy="415" rx="220" ry="55"/></g>
+<text x="95" y="110" font-family="monospace" font-size="9" letter-spacing="3" fill="#526f77">POSTMARK / NOWHERE</text>
+<text x="95" y="180" font-family="Georgia,serif" font-size="57" fill="#3d5b65">A letter</text><text x="95" y="244" font-family="Georgia,serif" font-style="italic" font-size="57" fill="#597783">to nowhere.</text>
+<g transform="translate(390 295) rotate(-12 180 110)" filter="url(#shadow)"><path d="M20 35 340 110 35 195 110 115Z" fill="#fffefa" stroke="#91a8ad" stroke-opacity=".4"/><path d="M35 195 340 110 110 115Z" fill="url(#wing)"/><path d="M110 115 340 110 105 137Z" fill="#839da7" fill-opacity=".48"/><path d="M20 35 110 115 105 137Z" fill="#c8d7d9"/><path d="M35 195 110 115 340 110" fill="none" stroke="#91a8ad" stroke-opacity=".5"/></g>
+<text x="110" y="548" font-family="monospace" font-size="10" letter-spacing="2" fill="#6f8b8f">FROM / YOU</text></svg>

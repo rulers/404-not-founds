@@ -1,0 +1,325 @@
+.sky {
+  --home-x: 50%;
+  --home-y: 57%;
+  --plane-size: 180px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: #3d5b65;
+  background: linear-gradient(
+    180deg,
+    #c9e0e5 0%,
+    #dae9e9 42%,
+    #efece0 80%,
+    #f4eddc 100%
+  );
+}
+.sky::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  background: radial-gradient(ellipse at 83% 18%, #fffff580, transparent 55%);
+  z-index: -1;
+}
+.cloudOne,
+.cloudTwo {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(16px);
+  opacity: 0.55;
+  background:
+    radial-gradient(ellipse at 30% 65%, #fffef5 0 27%, transparent 54%),
+    radial-gradient(ellipse at 55% 40%, #fffef4 0 19%, transparent 52%),
+    radial-gradient(ellipse at 70% 68%, #fffef5 0 24%, transparent 58%);
+  width: 470px;
+  height: 130px;
+}
+.cloudOne {
+  right: -80px;
+  top: 14%;
+  transform: rotate(-6deg);
+}
+.cloudTwo {
+  left: -140px;
+  top: 57%;
+  width: 550px;
+  opacity: 0.35;
+}
+.horizon {
+  position: absolute;
+  inset: 80% -10% 0;
+  border-top: 1px solid #f8f4e250;
+  transform: rotate(-2deg);
+  background: linear-gradient(#f6f1df30, #faf1d660);
+  z-index: -1;
+}
+.poem {
+  position: absolute;
+  left: 13%;
+  top: 17%;
+  pointer-events: none;
+  transition: opacity 0.6s;
+}
+.poem p {
+  font:
+    9px "Courier New",
+    monospace;
+  letter-spacing: 3.5px;
+  margin: 0 0 21px;
+  color: #526f77;
+}
+.poem h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(42px, 5.2vw, 76px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -2.7px;
+  margin: 0;
+}
+.poem h2 em {
+  font-weight: 400;
+  color: #597783;
+}
+.poem > span {
+  display: block;
+  margin-top: 20px;
+  font:
+    12px Georgia,
+    serif;
+  letter-spacing: 0.4px;
+  color: #5e7880;
+}
+.sky[data-phase="flying"] .poem {
+  opacity: 0.3;
+}
+.plane {
+  --fly-x: 0px;
+  --fly-y: 0px;
+  --heading: -0.14rad;
+  --flight-scale: 1;
+  position: absolute;
+  left: var(--home-x);
+  top: var(--home-y);
+  width: var(--plane-size);
+  aspect-ratio: 360/220;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  z-index: 2;
+  transform: translate(-50%, -50%) translate(var(--fly-x), var(--fly-y))
+    rotate(var(--heading)) scale(var(--flight-scale));
+  transform-origin: center;
+}
+.plane svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 15px 11px #54737e25);
+}
+.plane:focus-visible {
+  outline: none;
+}
+.focusContour {
+  opacity: 0;
+  stroke: #527b8a;
+  stroke-width: calc(1.5px / var(--flight-scale));
+  stroke-dasharray: none;
+}
+.plane:focus-visible:not([data-pointer-input="true"]) .focusContour {
+  opacity: 1;
+}
+.sky[data-phase="aiming"] .plane {
+  cursor: grabbing;
+}
+.sky[data-phase="flying"] .plane {
+  cursor: default;
+}
+.sky[data-phase="returned"] .plane {
+  transition: transform 0.75s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.guide {
+  position: absolute;
+  left: var(--home-x);
+  top: var(--home-y);
+  width: var(--aim-length, 110px);
+  transform-origin: left center;
+  transform: rotate(var(--aim-angle, -0.6rad));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.guide span {
+  display: block;
+  width: 100%;
+  border-top: 1px dashed #5e8490;
+}
+.guide i {
+  position: absolute;
+  right: 0;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid #5e8490;
+  border-top: 1px solid #5e8490;
+  transform: rotate(45deg);
+}
+.sky[data-phase="aiming"] .guide {
+  opacity: 0.8;
+}
+.departure {
+  position: absolute;
+  left: var(--home-x);
+  top: calc(var(--home-y) + 86px);
+  text-align: center;
+  transform: translateX(-50%);
+  color: #6f8b8f;
+  pointer-events: none;
+}
+.departure span {
+  font:
+    21px Georgia,
+    serif;
+}
+.departure p {
+  font:
+    8px "Courier New",
+    monospace;
+  letter-spacing: 2px;
+  margin: 7px 0;
+}
+.sky[data-stamped="true"] .departure {
+  opacity: 0;
+}
+.stamp {
+  color: #b44639;
+  opacity: 0;
+  mix-blend-mode: multiply;
+}
+.sky[data-stamped="true"] .stamp {
+  opacity: 0.9;
+}
+.sky[data-stamped="true"] .stamp {
+  animation: ink 0.6s 0.65s both;
+}
+.controls {
+  position: absolute;
+  bottom: 112px;
+  left: 24px;
+  right: 24px;
+  text-align: center;
+  pointer-events: none;
+}
+.controls output {
+  font:
+    9px "Courier New",
+    monospace;
+  letter-spacing: 1px;
+  color: #53717b;
+}
+.controls > p {
+  font-size: 10px;
+  margin: 11px 0 0;
+  color: #486770;
+}
+.controls .status {
+  min-height: 15px;
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+}
+.noScript {
+  position: absolute;
+  bottom: 190px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+}
+@keyframes ink {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.9;
+  }
+}
+@media (max-width: 700px) {
+  .poem {
+    top: 17%;
+    left: 9%;
+  }
+  .poem h2 {
+    font-size: clamp(43px, 11vw, 62px);
+    letter-spacing: -1.8px;
+  }
+  .poem p {
+    font-size: 8px;
+    margin-bottom: 17px;
+  }
+  .poem > span {
+    font-size: 11px;
+  }
+  .cloudOne {
+    width: 320px;
+    right: -180px;
+    top: 12%;
+  }
+  .cloudTwo {
+    left: -280px;
+    top: 51%;
+  }
+  .controls {
+    bottom: 110px;
+    left: 20px;
+    right: 20px;
+  }
+  .controls > p {
+    font-size: 9px;
+    line-height: 1.7;
+  }
+  .controls .status {
+    font-size: 10px;
+  }
+}
+@media (max-height: 550px) and (min-width: 600px) {
+  .poem {
+    left: 8%;
+    top: 24%;
+  }
+  .poem h2 {
+    font-size: 39px;
+  }
+  .poem p {
+    margin-bottom: 12px;
+  }
+  .poem > span {
+    display: none;
+  }
+  .controls {
+    left: auto;
+    right: 5%;
+    width: 35%;
+    bottom: 110px;
+  }
+  .sky {
+    --home-x: 50%;
+  }
+  .departure {
+    top: calc(var(--home-y) + 55px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky *,
+  .sky *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .sky[data-phase="flying"] .plane {
+    opacity: 0.6;
+  }
+}

@@ -5,6 +5,7 @@ import Liquid404 from "@/components/artworks/Liquid404";
 import Smoke404 from "@/components/artworks/Smoke404";
 import Radio404 from "@/components/artworks/Radio404";
 import VendingMachine404 from "@/components/artworks/VendingMachine404";
+import PaperPlane404 from "@/components/artworks/PaperPlane404";
 import Break404 from "@/components/artworks/Break404";
 
 export type Artwork = {
@@ -107,6 +108,17 @@ export const artworks: readonly Artwork[] = [
     thumbnail: "/thumbnails/007.png",
     theme: "light",
     component: VendingMachine404,
+  },
+  {
+    id: "008",
+    title: "404 Paper Plane",
+    category: "Journey",
+    createdAt: "2026-10-21",
+    description: "A letter to nowhere. Some things find their way back.",
+    instructions: "Drag to aim / Release to fly / Arrows + Enter",
+    thumbnail: "/thumbnails/008.svg",
+    theme: "light",
+    component: PaperPlane404,
   },
 ];
 

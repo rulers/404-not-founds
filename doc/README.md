@@ -21,5 +21,6 @@
 | 005 | Lost in Smoke 404   | [コンセプトと技術](day-005-lost-in-smoke-404.md) | [/404/005/](https://rulers.github.io/404-not-founds/404/005/) |
 | 006 | 404 Radio           | [コンセプトと技術](day-006-radio-404.md)         | [/404/006/](https://rulers.github.io/404-not-founds/404/006/) |
 | 007 | 404 Vending Machine | [コンセプトと技術](day-007-vending-machine.md)   | [/404/007/](https://rulers.github.io/404-not-founds/404/007/) |
+| 008 | 404 Paper Plane     | [コンセプトと技術](day-008-paper-plane.md)       | [/404/008/](https://rulers.github.io/404-not-founds/404/008/) |
 
 作品追加時はこの表と `lib/artworks.ts` を更新します。公開サイトは [こちら](https://rulers.github.io/404-not-founds/)。

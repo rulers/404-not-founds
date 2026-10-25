@@ -53,8 +53,8 @@ export function createRippleRenderer() {
     ctx.fillRect(0, 0, width, height);
     const direction = Math.atan2(state.wind.y, state.wind.x);
     // Perspective keeps the surface broad and quiet; wind turns the small wavelets.
-    const angle =
-      Math.atan2(Math.sin(direction) * 0.45, Math.cos(direction)) * 0.35;
+    // A continuous axis keeps opposite winds aligned and avoids a flip at ±PI.
+    const angle = Math.sin(direction * 2) * (0.04 + force * 0.14);
     for (let i = 0; i < patches.length; i++) {
       const p = patches[i];
       const travel = reduced ? 0 : motion * 0.003;

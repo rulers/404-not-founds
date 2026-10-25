@@ -75,8 +75,8 @@ export default function Ripples404() {
           strength < 0.3
             ? "SOFT BREEZE"
             : strength < 0.65
-            ? "BREEZE"
-            : "STEADY BREEZE"
+              ? "BREEZE"
+              : "STEADY BREEZE"
         }`;
       }
     }

@@ -51,7 +51,9 @@
   color: #e6e8d7;
 }
 .caption > span {
-  font: 14px Georgia, serif;
+  font:
+    14px Georgia,
+    serif;
   letter-spacing: 5px;
 }
 .caption > i {
@@ -60,7 +62,9 @@
   background: #d5ded09c;
 }
 .caption output {
-  font: 8px "Courier New", monospace;
+  font:
+    8px "Courier New",
+    monospace;
   letter-spacing: 2px;
   color: #c6d9d5;
 }

@@ -38,11 +38,6 @@ jobs:
           test -f out/404/008/index.html
           test -f out/404/009/index.html
           test -f out/404.html
-      - name: Diagnose formatting differences
-        if: failure()
-        run: |
-          npx prettier --write components/artworks/Ripples404.tsx components/artworks/Ripples404.module.css
-          git diff -- components/artworks/Ripples404.tsx components/artworks/Ripples404.module.css
       - name: Upload browser review artifacts
         if: always()
         uses: actions/upload-artifact@v4

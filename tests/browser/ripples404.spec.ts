@@ -110,6 +110,11 @@ test("navigation and taps do not blow; cancel, resize and hidden tabs leave no s
   await page.mouse.click(100, 250);
   await page.clock.runFor(100);
   expect(await number(page, "data-force")).toBe(0);
+  // Returning by keyboard after a pointer interaction must restore the focus ring.
+  await page.getByRole("link", { name: /HOME/ }).focus();
+  await page.keyboard.press("Tab");
+  await expect(input).toBeFocused();
+  await expect(input).toHaveCSS("outline-style", "solid");
   await input.focus();
   await page.keyboard.down("ArrowUp");
   await page.clock.runFor(800);

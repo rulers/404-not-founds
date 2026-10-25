@@ -262,6 +262,7 @@ export default function Ripples404() {
       start();
     };
     const inputBlur = () => {
+      delete input.dataset.pointer;
       clearInput();
       start();
     };

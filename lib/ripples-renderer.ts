@@ -237,7 +237,8 @@ export function createRippleRenderer() {
     // Artwork-only veils protect shared navigation without changing gallery CSS.
     const veil = ctx.createLinearGradient(0, 0, 0, height);
     veil.addColorStop(0, "#123e50c9");
-    veil.addColorStop(Math.min(0.28, 100 / height), "#17465400");
+    veil.addColorStop(Math.min(0.14, 72 / height), "#123e50b3");
+    veil.addColorStop(Math.min(0.24, 150 / height), "#17465400");
     veil.addColorStop(Math.max(0.7, 1 - 150 / height), "#123e5000");
     veil.addColorStop(1, "#123746d9");
     ctx.fillStyle = veil;

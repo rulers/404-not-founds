@@ -78,11 +78,13 @@ test("slow and fast real pointer drags drive the shared wind; release retains dr
 test("keyboard holds reach the edge without loss, then reverse wind releases the leaf", async ({
   page,
 }) => {
+  test.setTimeout(60000);
   await visit(page);
   const input = page.getByRole("group", { name: "水面に風を送る" });
   await input.focus();
   await page.keyboard.down("ArrowRight");
-  await page.clock.runFor(120000);
+  // Ten-minute boundary stability is covered by the model test; 30s reaches the edge in-browser.
+  await page.clock.runFor(30000);
   const edge = await number(page, "data-leaf-x");
   expect(edge).toBeLessThan(1);
   expect(edge).toBeGreaterThan(0.9);

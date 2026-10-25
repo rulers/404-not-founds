@@ -29,6 +29,8 @@ jobs:
           echo "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome" >> "$GITHUB_ENV"
           npx playwright install ffmpeg
       - run: npm run test:e2e
+        env:
+          RIPPLES_REVIEW_IMAGES: "1"
       - name: Verify static entrypoints
         run: |
           test -f out/index.html

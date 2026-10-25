@@ -8,6 +8,22 @@ async function ready(page: Page, url: string) {
     page.locator('section[aria-label="404 Ripples"]'),
   ).toHaveAttribute("data-ready", "true");
 }
+// Transport a few review frames through CI logs when local browser access is unavailable.
+// Full-resolution PNGs and the two real-time videos remain in the CI artifact.
+async function reviewFrame(page: Page, name: string) {
+  if (process.env.RIPPLES_REVIEW_IMAGES !== "1") return;
+  const data = (await page.screenshot({ type: "jpeg", quality: 65 })).toString(
+    "base64",
+  );
+  const parts = Math.ceil(data.length / 16000);
+  for (let i = 0; i < parts; i++)
+    console.log(
+      `RIPPLES_REVIEW:${name}:${i}/${parts}:${data.slice(
+        i * 16000,
+        (i + 1) * 16000,
+      )}`,
+    );
+}
 async function breeze(
   page: Page,
   duration: number,
@@ -45,11 +61,15 @@ test("review: idle, slow breeze, stronger breeze and natural decay in real time"
   await ready(page, `${baseURL}404/009/`);
   await page.waitForTimeout(1500);
   await page.screenshot({ path: info.outputPath("009-desktop.png") });
+  await reviewFrame(page, "desktop");
   await breeze(page, 2200, 70);
+  await reviewFrame(page, "weak");
   await page.waitForTimeout(500);
   await breeze(page, 500, 300, 5);
   await page.screenshot({ path: info.outputPath("009-wind.png") });
+  await reviewFrame(page, "wind");
   await page.waitForTimeout(7500);
+  await reviewFrame(page, "calm");
   await context.close();
   const mobile = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -61,6 +81,7 @@ test("review: idle, slow breeze, stronger breeze and natural decay in real time"
   await ready(mobilePage, `${baseURL}404/009/`);
   await mobilePage.waitForTimeout(600);
   await mobilePage.screenshot({ path: info.outputPath("009-mobile.png") });
+  await reviewFrame(mobilePage, "mobile");
   await mobile.close();
 });
 
@@ -83,6 +104,7 @@ test("review: the single leaf reaches an edge and returns with reverse wind in r
   await page.keyboard.down("ArrowRight");
   await page.waitForTimeout(12000);
   await page.keyboard.up("ArrowRight");
+  await reviewFrame(page, "edge");
   const before = Number(
     await page
       .locator('section[aria-label="404 Ripples"]')
@@ -91,6 +113,7 @@ test("review: the single leaf reaches an edge and returns with reverse wind in r
   await page.keyboard.down("ArrowLeft");
   await page.waitForTimeout(5500);
   await page.keyboard.up("ArrowLeft");
+  await reviewFrame(page, "returned");
   const after = Number(
     await page
       .locator('section[aria-label="404 Ripples"]')

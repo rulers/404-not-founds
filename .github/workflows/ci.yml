@@ -22,7 +22,12 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - name: Prepare runner-provided Chromium and video encoder
+        timeout-minutes: 3
+        run: |
+          test -x /usr/bin/google-chrome
+          echo "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome" >> "$GITHUB_ENV"
+          npx playwright install ffmpeg
       - run: npm run test:e2e
       - name: Verify static entrypoints
         run: |

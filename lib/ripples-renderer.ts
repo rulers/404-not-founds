@@ -57,14 +57,10 @@ export function createRippleRenderer() {
     const angle = Math.sin(direction * 2) * (0.04 + force * 0.14);
     for (let i = 0; i < patches.length; i++) {
       const p = patches[i];
-      const travel = reduced ? 0 : motion * 0.003;
       const x =
-        ((((p.x + Math.cos(direction) * travel) % 1.12) + 1.12) % 1.12) *
-          width -
-        width * 0.06;
+        ((((p.x + state.flow.x) % 1.12) + 1.12) % 1.12) * width - width * 0.06;
       const y =
-        ((((p.y + Math.sin(direction) * travel) % 1.08) + 1.08) % 1.08) *
-          height -
+        ((((p.y + state.flow.y) % 1.08) + 1.08) % 1.08) * height -
         height * 0.04;
       const sample = surfaceAt(state, p.x, p.y, reduced);
       const length = p.length * width * (0.6 + p.y * 0.5);

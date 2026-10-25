@@ -2,6 +2,7 @@ export type Vector = { x: number; y: number };
 export type RippleState = {
   time: number;
   phase: number;
+  flow: Vector;
   wind: Vector;
   user: Vector;
   leaf: Vector & { vx: number; vy: number; angle: number };
@@ -12,6 +13,7 @@ export function createRipples(): RippleState {
   return {
     time: 0,
     phase: 0,
+    flow: { x: 0, y: 0 },
     wind: { x: 0.035, y: 0.012 },
     user: { x: 0, y: 0 },
     leaf: { x: 0.74, y: 0.67, vx: 0, vy: 0, angle: -0.4 },
@@ -72,9 +74,15 @@ export function updateRipples(
   if (reduced) return;
   const strength = Math.min(1, Math.hypot(state.wind.x, state.wind.y));
   state.phase += dt * (0.24 + strength * 1.1);
+  const short = Math.min(width, height);
+  // Integrate velocity, not scene age times the current direction. Reversals
+  // remain continuous even after hours of idle water or sustained wind.
+  state.flow.x =
+    (state.flow.x + ((state.wind.x * short) / width) * dt * 0.008) % 1.12;
+  state.flow.y =
+    (state.flow.y + ((state.wind.y * short) / height) * dt * 0.008) % 1.08;
   const leaf = state.leaf;
   const inertia = 1 - Math.exp(-dt / 0.85);
-  const short = Math.min(width, height);
   leaf.vx += (((state.wind.x * short) / width) * 0.055 - leaf.vx) * inertia;
   leaf.vy += (((state.wind.y * short) / height) * 0.055 - leaf.vy) * inertia;
   const bounds = leafBounds(width, height);

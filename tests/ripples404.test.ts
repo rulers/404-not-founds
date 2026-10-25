@@ -110,6 +110,35 @@ test("reduced motion freezes spatial state while wind remains controllable", () 
     updateRipples(state, 1 / 60, { x: -1, y: 0 }, 390, 844, true);
   assert.deepEqual(state.leaf, leaf);
   assert.equal(state.phase, 0);
+  assert.deepEqual(state.flow, { x: 0, y: 0 });
   assert.ok(state.wind.x < -0.9);
   assert.deepEqual(surfaceAt(state, 0.5, 0.5, true), { height: 0, tilt: 0 });
+});
+
+test("water advection stays bounded with scene age and reverses continuously", () => {
+  const state = createRipples();
+  advance(state, 600, { x: 1, y: 0 });
+  assert.ok(Math.abs(state.flow.x) < 1.12 && Math.abs(state.flow.y) < 1.08);
+  let displacement = 0;
+  for (let i = 0; i < 300; i++) {
+    const before = state.flow.x;
+    updateRipples(state, 1 / 60, { x: -1, y: 0 }, 390, 844);
+    const delta = ((state.flow.x - before + 1.68) % 1.12) - 0.56;
+    assert.ok(
+      Math.abs(delta) < 0.00015,
+      "a reversal must not relocate the water",
+    );
+    displacement += delta;
+  }
+  assert.ok(displacement < -0.02);
+  const fresh = createRipples(),
+    old = createRipples();
+  old.phase = 1000000;
+  advance(fresh, 3, { x: 1, y: 0 });
+  advance(old, 3, { x: 1, y: 0 });
+  assert.deepEqual(
+    old.flow,
+    fresh.flow,
+    "elapsed wave phase cannot accelerate flow",
+  );
 });

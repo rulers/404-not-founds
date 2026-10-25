@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 
 test.describe.configure({ mode: "serial" });
 async function ready(page: Page, url: string) {
@@ -10,11 +10,7 @@ async function ready(page: Page, url: string) {
 }
 // Transport a few review frames through CI logs when local browser access is unavailable.
 // Full-resolution PNGs and the two real-time videos remain in the CI artifact.
-async function reviewFrame(page: Page, name: string) {
-  if (process.env.RIPPLES_REVIEW_IMAGES !== "1") return;
-  const data = (await page.screenshot({ type: "jpeg", quality: 65 })).toString(
-    "base64",
-  );
+function reviewPayload(name: string, data: string) {
   const parts = Math.ceil(data.length / 16000);
   for (let i = 0; i < parts; i++)
     console.log(
@@ -23,6 +19,18 @@ async function reviewFrame(page: Page, name: string) {
         (i + 1) * 16000,
       )}`,
     );
+}
+async function reviewFrame(page: Page, name: string) {
+  if (process.env.RIPPLES_REVIEW_IMAGES !== "1") return;
+  reviewPayload(
+    name,
+    (await page.screenshot({ type: "jpeg", quality: 65 })).toString("base64"),
+  );
+}
+async function reviewVideo(page: Page, name: string) {
+  if (process.env.RIPPLES_REVIEW_IMAGES !== "1") return;
+  const path = await page.video()!.path();
+  reviewPayload(name, (await readFile(path)).toString("base64"));
 }
 async function breeze(
   page: Page,
@@ -71,6 +79,7 @@ test("review: idle, slow breeze, stronger breeze and natural decay in real time"
   await page.waitForTimeout(7500);
   await reviewFrame(page, "calm");
   await context.close();
+  await reviewVideo(page, "interaction-video");
   const mobile = await browser.newContext({
     viewport: { width: 390, height: 844 },
     isMobile: true,
@@ -122,4 +131,5 @@ test("review: the single leaf reaches an edge and returns with reverse wind in r
   expect(after).toBeLessThan(before - 0.02);
   await page.waitForTimeout(500);
   await context.close();
+  await reviewVideo(page, "edge-video");
 });

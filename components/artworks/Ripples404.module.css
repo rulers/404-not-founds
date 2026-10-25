@@ -1,3 +1,9 @@
+/* Limit gallery text adjustments to this artwork's shell. */
+:global(.gallery-shell):has(.ripples) {
+  --muted: #c8d7cf;
+  --soft-fg: #e4e8dd;
+  --detail: #d0d7c8;
+}
 .ripples {
   position: relative;
   overflow: hidden;

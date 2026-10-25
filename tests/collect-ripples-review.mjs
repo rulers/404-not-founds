@@ -23,7 +23,8 @@ for (const file of files) {
   await copyFile(join(root, file), join(target, name));
   copied++;
 }
-if (copied !== 5) throw new Error(`Expected 5 review files, collected ${copied}.`);
+if (copied !== 5)
+  throw new Error(`Expected 5 review files, collected ${copied}.`);
 await writeFile(
   join(target, "README.md"),
   `# 404 Ripples — browser review\n\nPC: 1280×900 / mobile: 390×844 (Chromium emulation).\n\n- 009-desktop.png: idle\n- 009-mobile.png: idle\n- 009-wind.png: stronger breeze\n- 009-interaction.webm: idle → slow drag → faster drags → decay (real time)\n- 009-edge-return.webm: hold right → slow at edge → hold left → return (real time)\n\nThese are browser captures of the implementation. Physical Safari/Android device testing is separate.\n`,

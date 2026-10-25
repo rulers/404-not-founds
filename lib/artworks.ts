@@ -6,6 +6,7 @@ import Smoke404 from "@/components/artworks/Smoke404";
 import Radio404 from "@/components/artworks/Radio404";
 import VendingMachine404 from "@/components/artworks/VendingMachine404";
 import PaperPlane404 from "@/components/artworks/PaperPlane404";
+import Ripples404 from "@/components/artworks/Ripples404";
 import Break404 from "@/components/artworks/Break404";
 
 export type Artwork = {
@@ -119,6 +120,17 @@ export const artworks: readonly Artwork[] = [
     thumbnail: "/thumbnails/008.svg",
     theme: "light",
     component: PaperPlane404,
+  },
+  {
+    id: "009",
+    title: "404 Ripples",
+    category: "Atmosphere",
+    createdAt: "2026-10-25",
+    description: "A breeze crosses the water. Nothing drifts alone.",
+    instructions: "Drag to send a breeze / Hold arrow keys",
+    thumbnail: "/thumbnails/009.svg",
+    theme: "dark",
+    component: Ripples404,
   },
 ];
 

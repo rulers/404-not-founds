@@ -36,4 +36,13 @@ jobs:
           test -f out/404/006/index.html
           test -f out/404/007/index.html
           test -f out/404/008/index.html
+          test -f out/404/009/index.html
           test -f out/404.html
+      - name: Upload browser review artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-review-${{ github.event.pull_request.number }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -114,6 +114,10 @@ NEXT_PUBLIC_BASE_PATH=/404-not-founds npm run test:e2e
 
 見た目の変更時はスクリーンショットを確認し、作品の静止時と操作時、ナビゲーション、モバイルの横はみ出し、明暗テーマの可読性を見る。未実施の実機・性能計測を「確認済み」に含めない。
 
+PR CI は Ubuntu runner に付属する Chrome を `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` で選択し、動画収録用の FFmpeg だけを Playwright で取得する。OS パッケージとブラウザ本体の再取得を避けるが、検証項目は省略しない。Pages のデプロイ workflow は従来どおり Playwright の Chromium と依存を導入する。
+
+ブラウザ試験の出力は PR CI の `browser-review-<PR番号>` artifact に 7 日間保存する。Ripples の画像 3 枚と実時間動画 2 本は `ripples-review-<PR番号>` にまとめて 30 日間保存する。成果物の生成と目視・再生による確認、モバイル設定と実機確認を区別する。
+
 ## GitHub Pages
 
 公開URLは https://rulers.github.io/404-not-founds/ 。PagesのSourceは **GitHub Actions**。初回設定とデプロイは完了済み。

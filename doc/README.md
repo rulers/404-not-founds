@@ -23,4 +23,6 @@
 | 007 | 404 Vending Machine | [コンセプトと技術](day-007-vending-machine.md)   | [/404/007/](https://rulers.github.io/404-not-founds/404/007/) |
 | 008 | 404 Paper Plane     | [コンセプトと技術](day-008-paper-plane.md)       | [/404/008/](https://rulers.github.io/404-not-founds/404/008/) |
 
+| 009 | 404 Ripples | [コンセプトと技術](day-009-ripples.md) | [/404/009/](https://rulers.github.io/404-not-founds/404/009/) |
+
 作品追加時はこの表と `lib/artworks.ts` を更新します。公開サイトは [こちら](https://rulers.github.io/404-not-founds/)。

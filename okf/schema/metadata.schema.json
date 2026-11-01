@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "404 NOT FOUNDS local authoring profile (not the universal OKF schema)",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "title",
+    "description",
+    "status",
+    "created",
+    "updated",
+    "tags",
+    "sources"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(artworks|discussions|experiments|decisions)/[a-z0-9][a-z0-9-]*$"
+    },
+    "type": {
+      "enum": ["Artwork", "Discussion", "Experiment", "Decision"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["draft", "stable", "deprecated"]
+    },
+    "created": {
+      "type": "string",
+      "format": "offset-datetime"
+    },
+    "updated": {
+      "type": "string",
+      "format": "offset-datetime"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["resource"],
+        "properties": {
+          "resource": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "related_artworks": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]{3}$"
+      }
+    },
+    "related_discussions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^discussions/[a-z0-9][a-z0-9-]*$"
+      }
+    },
+    "artwork_id": {
+      "type": "string",
+      "pattern": "^[0-9]{3}$"
+    },
+    "production_status": {
+      "enum": ["idea", "in-progress", "implemented", "retired"]
+    },
+    "implementation_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "release_order": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "started_at": {
+      "type": "string",
+      "format": "offset-datetime"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "offset-datetime"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Artwork"
+          }
+        }
+      },
+      "then": {
+        "required": ["artwork_id", "production_status"]
+      }
+    }
+  ],
+  "additionalProperties": true
+}

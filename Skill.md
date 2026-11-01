@@ -4,7 +4,7 @@
 
 ## 作業開始
 
-1. `AGENTS.md` → 関連する `doc/` の文書を読む。
+1. `AGENTS.md` → [OKF索引](okf/index.md) の対象作品・関連する判断と実験 → 関連する `doc/` の文書と既存コードを読む。他作品との類似性を確認し、討論と実装承認は区別する。
 2. `git status --short`、`git diff`、`git branch --show-current`、`git remote -v` を確認する。
 3. [#00のブランチ運用](doc/development.md#ブランチ運用)に従い、remoteのmainを確認してfeatureブランチで作業する。未コミット変更がある場合は無断で破棄・上書き・退避しない。
 4. READMEの起動方法と `package.json` を確認し、依存が未導入なら `npm ci` を実行する。
@@ -19,6 +19,8 @@
 5. `lib/artworks.ts` に一意の3桁ID、タイトル、category、createdAt、description、instructions、thumbnail、theme、componentを登録する。配列末尾へ追加し、既存IDは変えない。
 6. [技術ドキュメントの構成](doc/development.md#作品別技術ドキュメント)に従って `doc/day-NNN-title.md` を追加し、[doc/README.md](doc/README.md) の作品一覧とPR本文からリンクする。
 7. Discoverから選択し、Homeと個別URLの同じ作品・テーマ・操作を確認する。`createdAt` による予約公開はないので、登録した作品は公開される。
+
+作品追加時は [OKF運用](okf/README.md) に従い、`okf/artworks/NNN.md` に短いコンセプトと技術資料・コードへの参照を追加する。`npm run knowledge:index` で索引を更新する。
 
 ## 共通ベースを変更する
 

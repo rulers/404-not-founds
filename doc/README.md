@@ -9,6 +9,7 @@
 - [#00 共通開発・運用（ブランチ・PR・技術資料・devlog）](development.md)
 - [開発ルール](../AGENTS.md)
 - [作業手順](../Skill.md)
+- [OKF知識基盤（作品・討論・実験・判断）](../okf/index.md) / [運用と正本の区分](../okf/README.md)
 
 ## 公開作品
 

@@ -136,6 +136,7 @@ http://localhost:3000/404-not-founds/ を開きます。テストサーバーは
 ## 開発ドキュメント
 
 - [doc/README.md](doc/README.md): ページ・作品・技術の記録の目次
+- [okf/index.md](okf/index.md): 作品コンセプト・討論・実験・制作判断の索引。[運用・追加・検索](okf/README.md)
 - [AGENTS.md](AGENTS.md): エージェントが自動検出する開発ルール。設計・品質・featureブランチ／PR・devlogの必須方針を集約
 - [Skill.md](Skill.md): 作品追加・共通ベース変更・検証・PR作成・日報の手順
 

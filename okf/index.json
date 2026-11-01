@@ -1,0 +1,286 @@
+{
+  "okf_version": "0.2",
+  "records": [
+    {
+      "id": "artworks/001",
+      "type": "Artwork",
+      "title": "Glitch 404",
+      "description": "行き先を失った信号",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["css", "signal"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-001-glitch-404.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Glitch404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "001",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/Glitch404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/001.md"
+    },
+    {
+      "id": "artworks/002",
+      "type": "Artwork",
+      "title": "Break the 404",
+      "description": "消すことを目的にしたゲーム",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["canvas", "game"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-002-break-the-404.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Break404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "002",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/Break404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/002.md"
+    },
+    {
+      "id": "artworks/003",
+      "type": "Artwork",
+      "title": "Glass 404",
+      "description": "存在しない世界へ道を開く",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["canvas", "material"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-003-glass-404.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Glass404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "003",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/Glass404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/003.md"
+    },
+    {
+      "id": "artworks/004",
+      "type": "Artwork",
+      "title": "Liquid 404",
+      "description": "形を保てない404",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["webgl", "shader", "material"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-004-liquid-404.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Liquid404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "004",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/Liquid404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/004.md"
+    },
+    {
+      "id": "artworks/005",
+      "type": "Artwork",
+      "title": "Lost in Smoke 404",
+      "description": "消えたのはページではなく視界",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["webgl", "occlusion"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-005-lost-in-smoke-404.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Smoke404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "005",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/Smoke404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/005.md"
+    },
+    {
+      "id": "artworks/006",
+      "type": "Artwork",
+      "title": "404 Radio",
+      "description": "存在しない周波数を探す",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["web-audio", "tuning"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-006-radio-404.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Radio404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "006",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/Radio404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/006.md"
+    },
+    {
+      "id": "artworks/007",
+      "type": "Artwork",
+      "title": "404 Vending Machine",
+      "description": "正常に動くが商品だけが見つからない",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["css", "play", "absurdity"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-007-vending-machine.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/VendingMachine404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "007",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/VendingMachine404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/007.md"
+    },
+    {
+      "id": "artworks/008",
+      "type": "Artwork",
+      "title": "404 Paper Plane",
+      "description": "存在しない宛先への手紙",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["svg", "bezier", "journey"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-008-paper-plane.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/PaperPlane404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "008",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/PaperPlane404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/008.md"
+    },
+    {
+      "id": "artworks/009",
+      "type": "Artwork",
+      "title": "404 Ripples",
+      "description": "不在の標識が環境と共に漂う",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["canvas", "wind", "atmosphere"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-009-ripples.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Ripples404.tsx"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/lib/artworks.ts"
+        }
+      ],
+      "artwork_id": "009",
+      "production_status": "implemented",
+      "implementation_path": "components/artworks/Ripples404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "artworks/009.md"
+    },
+    {
+      "id": "decisions/smoke-materials",
+      "type": "Decision",
+      "title": "煙の素材と描画手法を分離する",
+      "description": "権利条件の不明なPNGを避け、自作素材と作品専用WebGLを使う。",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["webgl", "licensing", "reuse"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-005-lost-in-smoke-404.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/components/artworks/Smoke404.tsx"
+        }
+      ],
+      "related_artworks": ["005"],
+      "implementation_path": "components/artworks/Smoke404.tsx",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "decisions/smoke-materials.md"
+    },
+    {
+      "id": "experiments/ripples-boundary",
+      "type": "Experiment",
+      "title": "風の境界減速と長時間の移流",
+      "description": "端で止まった葉が逆風で戻れ、水面が長時間後も飛ばない条件。",
+      "status": "draft",
+      "created": "2026-11-01T10:01:46Z",
+      "updated": "2026-11-01T10:01:46Z",
+      "tags": ["canvas", "wind", "regression"],
+      "sources": [
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/doc/day-009-ripples.md"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/blob/aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2/tests/ripples404.test.ts"
+        },
+        {
+          "resource": "https://github.com/rulers/404-not-founds/pull/16"
+        }
+      ],
+      "related_artworks": ["009"],
+      "implementation_path": "lib/ripples404.ts",
+      "commit_sha": "aa98d4bfcd4390bf4c66e6fb37a42cb365e740d2",
+      "path": "experiments/ripples-boundary.md"
+    }
+  ]
+}
